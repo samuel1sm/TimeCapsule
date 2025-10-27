@@ -34,7 +34,7 @@ struct CapsulesSummary: View {
 						}
 					}
 					.padding(.horizontal)
-					.padding(.bottom, 100) // space for FAB
+					.padding(.bottom, 10)
 				}
 			}
 
