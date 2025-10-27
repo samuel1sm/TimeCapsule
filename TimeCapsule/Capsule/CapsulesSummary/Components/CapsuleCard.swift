@@ -13,7 +13,7 @@ struct CapsuleCard: View {
 					image
 						.resizable()
 						.scaledToFill()
-				case .failure(let error):
+				case .failure:
 					Image(systemName: "photo")
 						.resizable()
 						.scaledToFit()
