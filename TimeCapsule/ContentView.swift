@@ -1,24 +1,34 @@
-//
-//  ContentView.swift
-//  TimeCapsule
-//
-//  Created by Samuel Martins on 27/10/25.
-//
-
 import SwiftUI
 
 struct ContentView: View {
-    var body: some View {
-        VStack {
-            Image(systemName: "globe")
-                .imageScale(.large)
-                .foregroundStyle(.tint)
-            Text("Hello, world!")
-        }
-        .padding()
-    }
+	var body: some View {
+		TabView {
+			// Home tab
+			Text("Home")
+				.tabItem {
+					Label("Home", systemImage: "house")
+				}
+
+			CapsulesSummary()
+				.tabItem {
+					Label("Capsule", systemImage: "capsule.lefthalf.filled")
+				}
+
+			// Calendar tab
+			Text("Calendar")
+				.tabItem {
+					Label("Calendar", systemImage: "calendar")
+				}
+
+			// Settings tab
+			Text("Settings")
+				.tabItem {
+					Label("Settings", systemImage: "gearshape")
+				}
+		}
+	}
 }
 
 #Preview {
-    ContentView()
+	ContentView()
 }

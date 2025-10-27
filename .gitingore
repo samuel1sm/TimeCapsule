@@ -1,0 +1,55 @@
+# ── macOS cruft ────────────────────────────────────────────────────────────────
+.DS_Store
+.AppleDouble
+.LSOverride
+
+# ── Xcode project/user noise ───────────────────────────────────────────────────
+DerivedData/
+build/
+xcuserdata/
+*.moved-aside
+*.xccheckout
+*.xcuserstate
+*.xcscmblueprint
+*.xcactivitylog
+
+# ── Swift & Swift Package Manager ──────────────────────────────────────────────
+.swiftpm/
+.build/
+
+# Xcode apps typically COMMIT Package.resolved for reproducible deps.
+# (Uncomment the next line ONLY if you intentionally want to ignore it.)
+# Package.resolved
+
+# If you ever vendor packages (rare for Xcode apps), uncomment:
+# Packages/
+# Package.pins
+
+# ── Playgrounds ────────────────────────────────────────────────────────────────
+timeline.xctimeline
+playground.xcworkspace
+
+# ── Dependency managers (toggle as your project uses them) ─────────────────────
+## CocoaPods
+# GitHub’s template recommends NOT ignoring Pods; commit them for stability.
+# If you prefer to ignore the Pods dir, uncomment:
+# Pods/
+
+## Carthage
+Carthage/Build/
+# Carthage/Checkouts/   # uncomment if you don’t commit sources
+
+# ── Fastlane artifacts ─────────────────────────────────────────────────────────
+fastlane/report.xml
+fastlane/Preview.html
+fastlane/screenshots
+fastlane/test_output
+
+# ── Editor junk (optional) ─────────────────────────────────────────────────────
+.idea/
+.vscode/
+
+# ── Logs / coverage ────────────────────────────────────────────────────────────
+*.log
+*.xccovreport
+*.xccovarchive
