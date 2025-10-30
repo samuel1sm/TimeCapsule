@@ -29,10 +29,6 @@ struct CreateCapsule: View {
 						.padding()
 						.background(Color(.systemGray6))
 						.cornerRadius(10)
-						.overlay(
-							RoundedRectangle(cornerRadius: 10)
-								.stroke(Color(.systemGray4))
-						)
 				}
 
 				// Your Message
@@ -44,10 +40,6 @@ struct CreateCapsule: View {
 						.padding(8)
 						.background(Color(.systemGray6))
 						.cornerRadius(10)
-						.overlay(
-							RoundedRectangle(cornerRadius: 10)
-								.stroke(Color(.systemGray4))
-						)
 						.overlay(
 							Group {
 								if message.isEmpty {
@@ -98,33 +90,26 @@ struct CreateCapsule: View {
 					Text("Unlock Date & Time")
 						.font(.headline)
 					HStack {
-						VStack(alignment: .leading, spacing: 4) {
-							Text("Date").font(.subheadline)
-							DatePicker(
-								"Choose when you want to open this capsule",
-								selection: $unlockDate,
-								displayedComponents: .date
-							)
-							.frame(maxWidth: .infinity)
-							.labelsHidden()
-							.padding()
-							.background(Color(.systemGray6))
-							.cornerRadius(10)
-						}
-						VStack(alignment: .leading, spacing: 4) {
-							Text("Hour").font(.subheadline)
-							DatePicker(
-								"Choose when you want to open this capsule",
-								selection: $unlockDate,
-								displayedComponents: .hourAndMinute
-							)
-							.frame(maxWidth: .infinity)
-							.labelsHidden()
-							.padding()
-							.background(Color(.systemGray6))
-							.cornerRadius(10)
-						}
+						DatePicker(
+							"Choose when you want to open this capsule",
+							selection: $unlockDate,
+							displayedComponents: .date
+						)
+						.frame(maxWidth: .infinity)
+						.labelsHidden()
+						.padding()
+						Divider()
+						DatePicker(
+							"Choose when you want to open this capsule",
+							selection: $unlockDate,
+							displayedComponents: .hourAndMinute
+						)
+						.frame(maxWidth: .infinity)
+						.labelsHidden()
+						.padding()
 					}
+					.background(Color(.systemGray6))
+						.cornerRadius(10)
 				}
 
 				// Privacy Settings
