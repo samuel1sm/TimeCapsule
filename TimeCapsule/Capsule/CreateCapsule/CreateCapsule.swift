@@ -1,10 +1,3 @@
-//
-//  CreateCapsule.swift
-//  TimeCapsule
-//
-//  Created by Samuel Martins on 27/10/25.
-//
-
 import SwiftUI
 
 struct CreateCapsule: View {
@@ -26,12 +19,11 @@ struct CreateCapsule: View {
 						text: $title,
 						prompt: Text("e.g., Dear Future Me").foregroundStyle(.gray)
 					)
-						.padding()
-						.background(Color(.systemGray6))
-						.cornerRadius(10)
+					.padding()
+					.background(Color(.systemGray6))
+					.cornerRadius(10)
 				}
 
-				// Your Message
 				VStack(alignment: .leading, spacing: 8) {
 					Text("Your Message").font(.headline)
 					TextEditor(text: $message)
@@ -53,100 +45,11 @@ struct CreateCapsule: View {
 						)
 				}
 
-				// Photos & Videos
-				VStack(alignment: .leading, spacing: 8) {
-					Text("Photos & Videos")
-						.font(.headline)
-					Button {
-						showMediaPicker.toggle()
-					} label: {
-						VStack(spacing: 12) {
-							Image(systemName: "arrow.up.circle")
-								.font(.system(size: 36))
-								.foregroundColor(Color.purple)
-							Text("Add photos or videos")
-								.font(.subheadline)
-								.foregroundColor(.primary)
-							Text("Tap to upload media")
-								.font(.footnote)
-								.foregroundColor(.gray)
-							HStack(spacing: 16) {
-								Image(systemName: "photo.on.rectangle")
-								Image(systemName: "video")
-							}
-							.foregroundColor(.gray)
-						}
-						.frame(maxWidth: .infinity)
-						.padding()
-						.background(
-							RoundedRectangle(cornerRadius: 12)
-								.strokeBorder(Color(.systemGray4), style: StrokeStyle(lineWidth: 1, dash: [4]))
-						)
-					}
-				}
+				PhotosAndVideosView(showMediaPicker: $showMediaPicker)
 
-				// Unlock Date
-				VStack(alignment: .leading, spacing: 8) {
-					Text("Unlock Date & Time")
-						.font(.headline)
-					HStack {
-						DatePicker(
-							"Choose when you want to open this capsule",
-							selection: $unlockDate,
-							displayedComponents: .date
-						)
-						.frame(maxWidth: .infinity)
-						.labelsHidden()
-						.padding()
-						Divider()
-						DatePicker(
-							"Choose when you want to open this capsule",
-							selection: $unlockDate,
-							displayedComponents: .hourAndMinute
-						)
-						.frame(maxWidth: .infinity)
-						.labelsHidden()
-						.padding()
-					}
-					.background(Color(.systemGray6))
-						.cornerRadius(10)
-				}
+				UnlockDateView(unlockDate: $unlockDate)
 
-				// Privacy Settings
-				VStack(alignment: .leading, spacing: 8) {
-					Text("Privacy Settings")
-						.font(.headline)
-					HStack(spacing: 12) {
-						Button(action: { isPrivate = true }) {
-							VStack {
-								Image(systemName: "lock.fill")
-								Text("Private")
-							}
-							.frame(maxWidth: .infinity)
-							.padding()
-							.background(isPrivate ? Color.purple.opacity(0.1) : Color(.systemGray6))
-							.overlay(
-								RoundedRectangle(cornerRadius: 12)
-									.stroke(isPrivate ? Color.purple : Color.clear, lineWidth: 2)
-							)
-							.cornerRadius(12)
-						}
-						Button(action: { isPrivate = false }) {
-							VStack {
-								Image(systemName: "person.2")
-								Text("Shareable")
-							}
-							.frame(maxWidth: .infinity)
-							.padding()
-							.background(!isPrivate ? Color.purple.opacity(0.1) : Color(.systemGray6))
-							.overlay(
-								RoundedRectangle(cornerRadius: 12)
-									.stroke(!isPrivate ? Color.purple : Color.clear, lineWidth: 2)
-							)
-							.cornerRadius(12)
-						}
-					}
-				}
+				PrivacySettingsView(isPrivate: $isPrivate)
 			}
 			.padding()
 		}
