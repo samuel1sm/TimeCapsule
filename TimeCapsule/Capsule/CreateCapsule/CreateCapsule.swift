@@ -7,6 +7,10 @@ struct CreateCapsule: View {
 	@State private var isPrivate = true
 	@State private var showMediaPicker = false
 	@State private var selectedMedia: [UIImage] = []
+	private var canSeal: Bool {
+		!title.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty &&
+		!message.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
+	}
 
 	var body: some View {
 		ScrollView {
@@ -50,6 +54,18 @@ struct CreateCapsule: View {
 				UnlockDateView(unlockDate: $unlockDate)
 
 				PrivacySettingsView(isPrivate: $isPrivate)
+
+				// Seal action button
+				Button {
+
+				} label: {
+					HStack {
+						Text("Seal Capsule")
+					}
+					.frame(height: 60)
+					.frame(maxWidth: .infinity)
+				}.buttonStyle(.sealCapsuleGradient)
+				.disabled(!canSeal)
 			}
 			.padding()
 		}
