@@ -1,44 +1,33 @@
 import SwiftUI
 
 struct CreateCapsule: View {
-	@State private var title: String = ""
-	@State private var message: String = ""
-	@State private var unlockDate = Date()
-	@State private var isPrivate = true
-	@State private var showMediaPicker = false
-	@State private var selectedMedia: [UIImage] = []
-	private var canSeal: Bool {
-		!title.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty &&
-		!message.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
-	}
+	@State private var viewModel = CreateCapsuleViewModel()
 
 	var body: some View {
 		ScrollView {
 			VStack(alignment: .leading, spacing: 24) {
+
 				VStack(alignment: .leading, spacing: 8) {
-					Text("Capsule Title")
-						.font(.headline)
-					TextField(
-						"",
-						text: $title,
-						prompt: Text("e.g., Dear Future Me").foregroundStyle(.gray)
-					)
+					Text("Capsule Title").font(.headline)
+					TextField("", text: $viewModel.title,
+							  prompt: Text("e.g., Dear Future Me").foregroundStyle(.gray))
 					.padding()
 					.background(Color(.systemGray6))
 					.cornerRadius(10)
 				}
 
+				// Message
 				VStack(alignment: .leading, spacing: 8) {
 					Text("Your Message").font(.headline)
-					TextEditor(text: $message)
+					TextEditor(text: $viewModel.message)
 						.frame(height: 120)
 						.scrollContentBackground(.hidden)
 						.padding(8)
 						.background(Color(.systemGray6))
 						.cornerRadius(10)
-						.overlay(
+						.overlay (
 							Group {
-								if message.isEmpty {
+								if viewModel.message.isEmpty {
 									Text("Write a note to your future self or describe this moment...")
 										.foregroundColor(.gray)
 										.padding(16)
@@ -49,28 +38,22 @@ struct CreateCapsule: View {
 						)
 				}
 
-				PhotosAndVideosView(showMediaPicker: $showMediaPicker)
+				PhotosAndVideosView(showMediaPicker: $viewModel.showMediaPicker)
+				UnlockDateView(unlockDate: $viewModel.unlockDate)
+				PrivacySettingsView(isPrivate: $viewModel.isPrivate)
 
-				UnlockDateView(unlockDate: $unlockDate)
-
-				PrivacySettingsView(isPrivate: $isPrivate)
-
-				// Seal action button
-				Button {
-
-				} label: {
-					HStack {
-						Text("Seal Capsule")
-					}
-					.frame(height: 60)
-					.frame(maxWidth: .infinity)
-				}.buttonStyle(.sealCapsuleGradient)
-				.disabled(!canSeal)
+				Button { viewModel.seal() } label: {
+					HStack { Text("Seal Capsule") }
+						.frame(height: 60)
+						.frame(maxWidth: .infinity)
+				}
+				.buttonStyle(.sealCapsuleGradient)
+				.disabled(!viewModel.canSeal)
 			}
 			.padding()
 		}
 		.navigationTitle("Create Capsule")
-		.sheet(isPresented: $showMediaPicker) {
+		.sheet(isPresented: $viewModel.showMediaPicker) {
 			Text("Media picker placeholder")
 		}
 	}
