@@ -53,6 +53,13 @@ struct CreateCapsule: View {
 			.padding()
 		}
 		.navigationTitle("Create Capsule")
+		.toolbar {
+			ToolbarItem(placement: .navigationBarTrailing) {
+				Button{ viewModel.reset() } label:  {
+					Image(systemName: "arrow.trianglehead.counterclockwise")
+				}
+			}
+		}
 		.sheet(isPresented: $viewModel.showMediaPicker) {
 			Text("Media picker placeholder")
 		}
