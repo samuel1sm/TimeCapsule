@@ -9,8 +9,8 @@ struct CreateCapsule: View {
 
 				VStack(alignment: .leading, spacing: 8) {
 					Text("Capsule Title").font(.headline)
-					TextField("", text: $viewModel.title,
-							  prompt: Text("e.g., Dear Future Me").foregroundStyle(.gray))
+					TextField("", text: $viewModel.title, prompt: Text("e.g., Dear Future Me")
+						.foregroundStyle(.gray))
 					.padding()
 					.background(Color(.systemGray6))
 					.cornerRadius(10)
