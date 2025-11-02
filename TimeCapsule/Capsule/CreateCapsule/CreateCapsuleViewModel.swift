@@ -16,7 +16,8 @@ final class CreateCapsuleViewModel {
     // Derived state
     var canSeal: Bool {
         !title.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty &&
-        !message.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
+        !message.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty &&
+		unlockDate != nil
     }
 
     // Actions
