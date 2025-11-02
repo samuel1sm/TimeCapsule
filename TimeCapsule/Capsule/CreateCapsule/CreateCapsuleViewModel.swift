@@ -6,7 +6,7 @@ final class CreateCapsuleViewModel {
     // Form fields
     var title: String = ""
     var message: String = ""
-    var unlockDate: Date = .now
+    var unlockDate: Date? = nil
     var isPrivate: Bool = true
 
     // Media
@@ -39,7 +39,7 @@ final class CreateCapsuleViewModel {
     func reset() {
         title = ""
         message = ""
-        unlockDate = .now
+        unlockDate = nil
         isPrivate = true
         selectedMedia.removeAll()
         showMediaPicker = false
