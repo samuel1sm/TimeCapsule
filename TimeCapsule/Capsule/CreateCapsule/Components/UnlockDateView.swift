@@ -45,7 +45,6 @@ struct UnlockDateView: View {
 				}
 				.buttonStyle(.plain)
 			} else {
-				// When there is a selected date, show compact inline controls
 				HStack {
 					DatePicker(
 						"",

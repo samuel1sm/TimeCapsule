@@ -10,7 +10,6 @@ final class CreateCapsuleViewModel {
     var isPrivate: Bool = true
 
     // Media
-    var showMediaPicker: Bool = false
     var selectedMedia: [UIImage] = []
 
     // Derived state
@@ -18,11 +17,6 @@ final class CreateCapsuleViewModel {
         !title.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty &&
         !message.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty &&
 		unlockDate != nil
-    }
-
-    // Actions
-    func toggleMediaPicker(_ flag: Bool? = nil) {
-        if let flag { showMediaPicker = flag } else { showMediaPicker.toggle() }
     }
 
     func addMedia(_ images: [UIImage]) {
@@ -43,6 +37,5 @@ final class CreateCapsuleViewModel {
         unlockDate = nil
         isPrivate = true
         selectedMedia.removeAll()
-        showMediaPicker = false
     }
 }

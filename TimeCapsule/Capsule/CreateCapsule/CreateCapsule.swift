@@ -1,7 +1,9 @@
 import SwiftUI
+import PhotosUI
 
 struct CreateCapsule: View {
 	@State private var viewModel = CreateCapsuleViewModel()
+	@State private var selectedItems: [PhotosPickerItem] = []
 
 	var body: some View {
 		ScrollView {
@@ -38,9 +40,10 @@ struct CreateCapsule: View {
 						)
 				}
 
-				PhotosAndVideosView(showMediaPicker: $viewModel.showMediaPicker)
+				PhotosAndVideosView(selectedItems: $selectedItems)
 				UnlockDateView(unlockDate: $viewModel.unlockDate)
-				PrivacySettingsView(isPrivate: $viewModel.isPrivate)
+				Spacer()
+//				PrivacySettingsView(isPrivate: $viewModel.isPrivate)
 
 				Button { viewModel.seal() } label: {
 					HStack { Text("Seal Capsule") }
@@ -59,9 +62,6 @@ struct CreateCapsule: View {
 					Image(systemName: "arrow.trianglehead.counterclockwise")
 				}
 			}
-		}
-		.sheet(isPresented: $viewModel.showMediaPicker) {
-			Text("Media picker placeholder")
 		}
 	}
 }
