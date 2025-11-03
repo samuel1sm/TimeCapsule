@@ -18,7 +18,6 @@ struct UnlockDateView: View {
 			}
 
 			if unlockDate == nil {
-				// Placeholder that opens the picker when tapped
 				Button {
 					tempDate = Date()
 					showPicker = true
