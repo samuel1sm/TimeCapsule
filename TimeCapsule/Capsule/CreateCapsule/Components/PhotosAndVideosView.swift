@@ -23,7 +23,8 @@ struct PhotosAndVideosView: View {
 
 			VStack(spacing: 16) {
 				if imagesAreLoading {
-
+					ProgressView()
+						.progressViewStyle(.circular)
 				} else {
 					notLoadingViews()
 				}
@@ -106,12 +107,19 @@ struct PhotosAndVideosView: View {
 			}
 		}
 		.onChange(of: selectedItems) {
-			selectedImages.removeAll()
+			imagesAreLoading = true
 			Task {
+				await MainActor.run { selectedImages.removeAll() }
+
+				var newImages = [Image]()
 				for item in selectedItems {
 					if let loadedImage = try? await item.loadTransferable(type: Image.self) {
-						selectedImages.append(loadedImage)
-					}
+						newImages.append(loadedImage) }
+				}
+
+				await MainActor.run {
+					selectedImages = newImages
+					imagesAreLoading = false
 				}
 			}
 		}
