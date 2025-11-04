@@ -4,7 +4,7 @@ import PhotosUI
 struct PhotosAndVideosView: View {
 	@Binding var selectedItems: [PhotosPickerItem]
 	@State private var selectedImages: [Image] = []
-	@State private var width: CGFloat = 0
+	@State private var width: CGFloat = 100
 	@State private var imagesAreLoading = false
 	@State private var isShowingPhotoPicker = false
 

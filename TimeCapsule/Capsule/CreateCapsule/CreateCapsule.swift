@@ -18,7 +18,6 @@ struct CreateCapsule: View {
 					.cornerRadius(10)
 				}
 
-				// Message
 				VStack(alignment: .leading, spacing: 8) {
 					Text("Your Message").font(.headline)
 					TextEditor(text: $viewModel.message)
