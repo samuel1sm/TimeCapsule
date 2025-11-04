@@ -6,6 +6,7 @@ struct PhotosAndVideosView: View {
 	@State private var selectedImages: [Image] = []
 	@State private var width: CGFloat = 0
 	@State private var imagesAreLoading = false
+	@State private var isShowingPhotoPicker = false
 
 	var body: some View {
 		VStack(alignment: .leading, spacing: 8) {
@@ -83,10 +84,7 @@ struct PhotosAndVideosView: View {
 			}
 		}
 
-		PhotosPicker(
-			selection: $selectedItems,
-			photoLibrary: .shared()
-		) {
+		Group {
 			if selectedItems.isEmpty {
 				VStack(spacing: 12) {
 					Image(systemName: "arrow.up.circle")
@@ -104,25 +102,36 @@ struct PhotosAndVideosView: View {
 					}
 					.foregroundColor(.gray)
 				}
+				.frame(maxWidth: .infinity)
+				.contentShape(Rectangle())
+				.onTapGesture { isShowingPhotoPicker = true }
 			} else {
 				HStack(alignment: .center, spacing: 16) {
 					Image(systemName: "plus")
 					Text("Add more").font(.headline)
-				}.foregroundStyle(.black)
-					.frame(height: 48)
-					.frame(maxWidth: .infinity)
-					.padding(.horizontal, 16)
-					.overlay(
-						RoundedRectangle(cornerRadius: 12)
-							.stroke(Color(.systemGray4), lineWidth: 1)
-					)
+				}
+				.foregroundStyle(.black)
+				.frame(height: 48)
+				.frame(maxWidth: .infinity)
+				.padding(.horizontal, 16)
+				.overlay(
+					RoundedRectangle(cornerRadius: 12)
+						.stroke(Color(.systemGray4), lineWidth: 1)
+				)
+				.contentShape(Rectangle())
+				.onTapGesture { isShowingPhotoPicker = true }
 			}
 		}
-		.onChange(of: selectedItems) {
-			imagesAreLoading = true
+		.photosPicker(
+			isPresented: $isShowingPhotoPicker,
+			selection: $selectedItems,
+			matching: .any(of: [.images, .videos]),
+			preferredItemEncoding: .automatic
+		)
+		.onChange(of: isShowingPhotoPicker) { _, hasClose in
+			guard !hasClose else { return }
 			Task {
-				await MainActor.run { selectedImages.removeAll() }
-
+				imagesAreLoading = true
 				var newImages = [Image]()
 				for item in selectedItems {
 					if let loadedImage = try? await item.loadTransferable(type: Image.self) {
@@ -134,6 +143,10 @@ struct PhotosAndVideosView: View {
 					imagesAreLoading = false
 				}
 			}
+		}
+		.onChange(of: selectedItems) { _, newValue in
+			guard newValue.isEmpty else { return }
+			selectedImages.removeAll()
 		}
 	}
 }

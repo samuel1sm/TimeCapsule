@@ -58,7 +58,10 @@ struct CreateCapsule: View {
 		.navigationTitle("Create Capsule")
 		.toolbar {
 			ToolbarItem(placement: .navigationBarTrailing) {
-				Button{ viewModel.reset() } label:  {
+				Button{
+					selectedItems.removeAll()
+					viewModel.reset()
+				} label:  {
 					Image(systemName: "arrow.trianglehead.counterclockwise")
 				}
 			}
