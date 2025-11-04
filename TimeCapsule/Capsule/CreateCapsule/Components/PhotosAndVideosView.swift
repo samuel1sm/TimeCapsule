@@ -4,7 +4,7 @@ import PhotosUI
 struct PhotosAndVideosView: View {
 	@Binding var selectedItems: [PhotosPickerItem]
 	@State private var selectedImages: [Image] = []
-	@State private var width: CGFloat = 100
+	@State private var width: CGFloat = 0
 	@State private var imagesAreLoading = false
 
 	var body: some View {
@@ -35,18 +35,11 @@ struct PhotosAndVideosView: View {
 						.strokeBorder(Color(.systemGray4), style: StrokeStyle(lineWidth: 1, dash: [4]))
 				}
 		}
-		.overlay {
-			GeometryReader { proxy in
-				Color.clear.task(id: proxy.size) {
-					width = proxy.size.width
-				}
-			}
-		}
 	}
 
 	@ViewBuilder
 	private func notLoadingViews() -> some View {
-		let spacing: CGFloat = 12
+		let spacing: CGFloat = 10
 		let columns = Array(repeating: GridItem(.flexible(), spacing: spacing), count: 4)
 		let itemWidth = (width - spacing * 3) / 4
 		let rows = Int(ceil(Double(selectedImages.count) / 4))
@@ -58,17 +51,36 @@ struct PhotosAndVideosView: View {
 			ScrollView {
 				LazyVGrid(columns: columns, spacing: spacing) {
 					ForEach(selectedImages.indices, id: \.self) { i in
-						selectedImages[i]
-							.resizable()
-							.scaledToFill()
-							.frame(width: itemWidth, height: itemWidth)
-							.clipped()
-							.cornerRadius(8)
+						ZStack(alignment: .topTrailing) {
+							selectedImages[i]
+								.resizable()
+								.scaledToFill()
+								.frame(width: itemWidth, height: itemWidth)
+								.clipped()
+								.cornerRadius(8)
+							Button {
+								selectedImages.remove(at: i)
+								selectedItems.remove(at: i)
+							} label: {
+								Image(systemName: "x.circle")
+									.tint(.white)
+									.padding(.all, 4)
+									.background(.black.opacity(0.6))
+									.clipShape(.circle)
+							}.padding(2)
+						}
 					}
 				}
 			}
 			.scrollDisabled(selectedImages.count <= 16)
 			.frame(height: gridHeight)
+			.overlay {
+				GeometryReader { proxy in
+					Color.clear.task(id: proxy.size) {
+						width = proxy.size.width
+					}
+				}
+			}
 		}
 
 		PhotosPicker(
