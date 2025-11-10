@@ -32,6 +32,7 @@ private struct PickedVideo: Transferable {
 struct PhotosAndVideosView: View {
 	@Binding var selectedMediaModel: [SelectedMediaModel]
 	@State private var selectedItems: [PhotosPickerItem] = []
+	@State private var oldSelectedItems: [PhotosPickerItem] = []
 	@State private var width: CGFloat = 100
 	@State private var imagesAreLoading = false
 	@State private var isShowingPhotoPicker = false
@@ -152,10 +153,17 @@ struct PhotosAndVideosView: View {
 			isPresented: $isShowingPhotoPicker,
 			selection: $selectedItems,
 			matching: .any(of: [.images, .videos]),
-			preferredItemEncoding: .automatic
+			preferredItemEncoding: .current
 		)
 		.onChange(of: isShowingPhotoPicker) { _, isOpen in
-			guard !isOpen else { return }
+			if isOpen {
+				oldSelectedItems = selectedItems
+				return
+			}
+			guard oldSelectedItems != selectedItems else {
+				oldSelectedItems.removeAll()
+				return
+			}
 			handleSelectedFiles()
 		}
 		.onChange(of: selectedMediaModel) { _, newValue in
