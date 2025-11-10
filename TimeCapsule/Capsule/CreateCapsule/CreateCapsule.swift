@@ -3,12 +3,11 @@ import PhotosUI
 
 struct CreateCapsule: View {
 	@State private var viewModel = CreateCapsuleViewModel()
-	@State private var selectedItems: [PhotosPickerItem] = []
+	@State private var selectedItems: [SelectedMediaModel] = []
 
 	var body: some View {
 		ScrollView {
 			VStack(alignment: .leading, spacing: 24) {
-
 				VStack(alignment: .leading, spacing: 8) {
 					Text("Capsule Title").font(.headline)
 					TextField("", text: $viewModel.title, prompt: Text("e.g., Dear Future Me")
@@ -39,7 +38,7 @@ struct CreateCapsule: View {
 						)
 				}
 
-				PhotosAndVideosView(selectedItems: $selectedItems)
+				PhotosAndVideosView(selectedMediaModel: $selectedItems)
 				UnlockDateView(unlockDate: $viewModel.unlockDate)
 				Spacer()
 //				PrivacySettingsView(isPrivate: $viewModel.isPrivate)

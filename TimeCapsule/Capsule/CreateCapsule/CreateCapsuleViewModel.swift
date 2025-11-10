@@ -3,11 +3,17 @@ import Observation
 
 @Observable
 final class CreateCapsuleViewModel {
+	public static var capsuleID: UUID?
+
     // Form fields
     var title: String = ""
     var message: String = ""
     var unlockDate: Date? = nil
     var isPrivate: Bool = true
+
+	init() {
+		CreateCapsuleViewModel.capsuleID = .init()
+	}
 
     // Media
     var selectedMedia: [UIImage] = []
