@@ -6,7 +6,7 @@ enum MediaTypes {
 	case video
 }
 
-struct SelectedMediaModel {
+struct SelectedMediaModel: Equatable {
 
 	let type: MediaTypes
 	let url: URL

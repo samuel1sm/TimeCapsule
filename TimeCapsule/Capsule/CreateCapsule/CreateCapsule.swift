@@ -3,7 +3,6 @@ import PhotosUI
 
 struct CreateCapsule: View {
 	@State private var viewModel = CreateCapsuleViewModel()
-	@State private var selectedItems: [SelectedMediaModel] = []
 
 	var body: some View {
 		ScrollView {
@@ -38,7 +37,7 @@ struct CreateCapsule: View {
 						)
 				}
 
-				PhotosAndVideosView(selectedMediaModel: $selectedItems)
+				PhotosAndVideosView(selectedMediaModel: $viewModel.selectedMedia)
 				UnlockDateView(unlockDate: $viewModel.unlockDate)
 				Spacer()
 //				PrivacySettingsView(isPrivate: $viewModel.isPrivate)
@@ -57,7 +56,6 @@ struct CreateCapsule: View {
 		.toolbar {
 			ToolbarItem(placement: .navigationBarTrailing) {
 				Button{
-					selectedItems.removeAll()
 					viewModel.reset()
 				} label:  {
 					Image(systemName: "arrow.trianglehead.counterclockwise")

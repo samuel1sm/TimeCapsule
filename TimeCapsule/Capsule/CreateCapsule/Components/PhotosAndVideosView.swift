@@ -1,6 +1,7 @@
 import SwiftUI
 import PhotosUI
 import UniformTypeIdentifiers
+import AVKit
 
 private struct PickedVideo: Transferable {
 	let url: URL
@@ -81,24 +82,10 @@ struct PhotosAndVideosView: View {
 					ForEach(selectedMediaModel.indices, id: \.self) { i in
 						ZStack(alignment: .topTrailing) {
 							let model = selectedMediaModel[i]
-							if model.type == .image {
-								AsyncImage(url: model.url) { result in
-									switch result {
-									case .empty:
-										Text("eita")
-									case .success(let image):
-										image.resizable()
-											.scaledToFill()
-											.frame(width: itemWidth, height: itemWidth)
-											.clipped()
-											.cornerRadius(8)
-									case .failure(let error):
-										Text("falhou")
-									@unknown default:
-										Text("falhou")
-									}
-								}
-							}
+							LocalVideoPlayerView(model: model)
+								.frame(width: itemWidth, height: itemWidth)
+								.clipped()
+								.cornerRadius(8)
 							Button {
 								selectedMediaModel.remove(at: i)
 								selectedItems.remove(at: i)
@@ -125,7 +112,7 @@ struct PhotosAndVideosView: View {
 		}
 
 		Group {
-			if selectedItems.isEmpty {
+			if selectedMediaModel.isEmpty {
 				VStack(spacing: 12) {
 					Image(systemName: "arrow.up.circle")
 						.font(.system(size: 36))
@@ -167,13 +154,13 @@ struct PhotosAndVideosView: View {
 			matching: .any(of: [.images, .videos]),
 			preferredItemEncoding: .automatic
 		)
-		.onChange(of: isShowingPhotoPicker) { _, hasClose in
-			guard !hasClose else { return }
+		.onChange(of: isShowingPhotoPicker) { _, isOpen in
+			guard !isOpen else { return }
 			handleSelectedFiles()
 		}
-		.onChange(of: selectedItems) { _, newValue in
+		.onChange(of: selectedMediaModel) { _, newValue in
 			guard newValue.isEmpty else { return }
-			selectedMediaModel.removeAll()
+			selectedItems.removeAll()
 		}
 	}
 

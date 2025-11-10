@@ -10,23 +10,17 @@ final class CreateCapsuleViewModel {
     var message: String = ""
     var unlockDate: Date? = nil
     var isPrivate: Bool = true
+	var selectedMedia: [SelectedMediaModel] = []
 
 	init() {
 		CreateCapsuleViewModel.capsuleID = .init()
 	}
-
-    // Media
-    var selectedMedia: [UIImage] = []
 
     // Derived state
     var canSeal: Bool {
         !title.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty &&
         !message.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty &&
 		unlockDate != nil
-    }
-
-    func addMedia(_ images: [UIImage]) {
-        selectedMedia.append(contentsOf: images)
     }
 
     func removeMedia(at offsets: IndexSet) {
