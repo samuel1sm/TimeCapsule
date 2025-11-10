@@ -10,7 +10,7 @@ private struct PickedVideo: Transferable {
 		FileRepresentation(contentType: .movie) { movie in
 			SentTransferredFile(movie.url)
 		} importing: { received in
- 			let (folder, fileManager) = await FileManager.getPathAndManager()
+			let (folder, fileManager) = await FileManager.getPathAndManager()
 
 			// 3) Build unique file name
 			let ext = received.file.pathExtension.isEmpty ? "mov" : received.file.pathExtension
@@ -52,12 +52,7 @@ struct PhotosAndVideosView: View {
 			}
 
 			VStack(spacing: 16) {
-				if imagesAreLoading {
-					ProgressView()
-						.progressViewStyle(.circular)
-				} else {
-					notLoadingViews()
-				}
+				notLoadingViews()
 			}.frame(maxWidth: .infinity)
 				.padding()
 				.background{
@@ -134,22 +129,27 @@ struct PhotosAndVideosView: View {
 				.contentShape(Rectangle())
 				.onTapGesture { isShowingPhotoPicker = true }
 			} else {
-				HStack(alignment: .center, spacing: 16) {
-					Image(systemName: "plus")
-					Text("Add more").font(.headline)
-				}
-				.frame(height: 48)
-				.frame(maxWidth: .infinity)
-				.padding(.horizontal, 16)
-				.overlay(
-					RoundedRectangle(cornerRadius: 12)
-						.stroke(Color(.systemGray4), lineWidth: 1)
-				)
-				.contentShape(Rectangle())
-				.onTapGesture { isShowingPhotoPicker = true }
+				if imagesAreLoading {
+					ProgressView()
+						.progressViewStyle(.circular)
+						.padding(.top, 16)
+				} else {
+					HStack(alignment: .center, spacing: 16) {
+						Image(systemName: "plus")
+						Text("Add more").font(.headline)
+					}
+					.frame(height: 48)
+					.frame(maxWidth: .infinity)
+					.padding(.horizontal, 16)
+					.overlay(
+						RoundedRectangle(cornerRadius: 12)
+							.stroke(Color(.systemGray4), lineWidth: 1)
+					)
+					.contentShape(Rectangle())
+					.onTapGesture { isShowingPhotoPicker = true }
 			}
 		}
-		.photosPicker(
+	}.photosPicker(
 			isPresented: $isShowingPhotoPicker,
 			selection: $selectedItems,
 			matching: .any(of: [.images, .videos]),
@@ -170,41 +170,49 @@ struct PhotosAndVideosView: View {
 			guard newValue.isEmpty else { return }
 			selectedItems.removeAll()
 		}
-	}
+}
 
-	private func handleSelectedFiles() {
-		let (timeCapsuleFolder, _) = FileManager.getPathAndManager()
-		Task {
-			imagesAreLoading = true
-			var newSelected = [SelectedMediaModel]()
+private func handleSelectedFiles() {
+	let (timeCapsuleFolder, _) = FileManager.getPathAndManager()
+	Task(priority: .userInitiated) {
+		imagesAreLoading = true
+
+		await withTaskGroup(of: SelectedMediaModel?.self) { group in
 			for item in selectedItems {
-				// Try importing as a movie first; if it fails, fall back to image
-				if let movie = try? await item.loadTransferable(type: PickedVideo.self) {
-					newSelected.append(.init(type: .video, url: movie.url))
-					continue
-				}
-
-				if let data = try? await item.loadTransferable(type: Data.self),
-				   let _ = UIImage(data: data) {
-
-					let fileName = UUID().uuidString + ".png"
-					let destination = timeCapsuleFolder.appendingPathComponent(fileName)
-					
-					do {
-						try data.write(to: destination, options: .atomic)
-					} catch {
-						print("Failed to save image:", error)
+				group.addTask {
+					// 1) Try fast video path first (no Photos transcoding thanks to .current)
+					if let movie = try? await item.loadTransferable(type: PickedVideo.self) {
+						return SelectedMediaModel(type: .video, url: movie.url)
 					}
-					newSelected.append(.init(type: .image, url: destination))
+
+					// 2) Fallback to image: write bytes directly without decoding to UIImage
+					if let data = try? await item.loadTransferable(type: Data.self) {
+						let fileName = UUID().uuidString + ".png"
+						let destination = timeCapsuleFolder.appendingPathComponent(fileName)
+						do {
+							try data.write(to: destination, options: [.atomic])
+							return SelectedMediaModel(type: .image, url: destination)
+						} catch {
+							print("Failed to save image:", error)
+						}
+					}
+					return nil
 				}
 			}
 
-			await MainActor.run {
-				selectedMediaModel = newSelected
-				imagesAreLoading = false
+			// Progressive UI updates: append items as they finish, for better perceived speed
+			for await result in group {
+				if let model = result {
+					await MainActor.run {
+						selectedMediaModel.append(model)
+					}
+				}
 			}
+
+			await MainActor.run { imagesAreLoading = false }
 		}
 	}
+}
 }
 
 private struct PhotosAndVideosPreviewHost: View {
