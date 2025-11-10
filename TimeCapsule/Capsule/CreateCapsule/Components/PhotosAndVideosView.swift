@@ -189,11 +189,11 @@ struct PhotosAndVideosView: View {
 					}
 					newSelected.append(.init(type: .image, url: destination))
 				}
-				
-				await MainActor.run {
-					selectedMediaModel = newSelected
-					imagesAreLoading = false
-				}
+			}
+
+			await MainActor.run {
+				selectedMediaModel = newSelected
+				imagesAreLoading = false
 			}
 		}
 	}
