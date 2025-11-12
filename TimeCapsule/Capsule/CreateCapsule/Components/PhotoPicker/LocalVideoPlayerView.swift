@@ -5,24 +5,26 @@ struct LocalVideoPlayerView: View {
 	@State private var isLoading = true
 	private let model: SelectedMediaModel
 	@State private var player: AVPlayer?
-
+	
 	init(model: SelectedMediaModel) {
 		self.model = model
 		if model.type == .video {
-			_player = State(initialValue: AVPlayer(url: model.url))
+			let p = AVPlayer(url: model.url)
+			p.isMuted = true
+			_player = State(initialValue: p)
 		}
 	}
-
+	
 	var body: some View {
 		ZStack {
 			if isLoading {
 				ProgressView()
 					.progressViewStyle(.circular)
 			}
-
+			
 			if let player, model.type == .video {
 				VideoPlayer(player: player)
-					.disabled(false)
+					.allowsHitTesting(false)
 					.onAppear {
 						isLoading = false
 					}
@@ -30,11 +32,11 @@ struct LocalVideoPlayerView: View {
 				AsyncImage(url: model.url) { phase in
 					if case let .success(image) = phase {
 						image
-						.resizable()
-						.scaledToFill()
-						.onAppear {
-							isLoading = false
-						}
+							.resizable()
+							.scaledToFill()
+							.onAppear {
+								isLoading = false
+							}
 					} else {
 						ProgressView()
 							.progressViewStyle(.circular)
@@ -47,8 +49,11 @@ struct LocalVideoPlayerView: View {
 		}
 		.onAppear {
 			if model.type == .video && player == nil {
-				player = AVPlayer(url: model.url)
+				let p = AVPlayer(url: model.url)
+				p.isMuted = true
+				player = p
 			}
+			player?.isMuted = true
 			player?.play()
 		}
 		.onDisappear {
