@@ -63,7 +63,8 @@ struct PhotosAndVideosView: View {
 						onItemSelectedToRemove: { index in removeItems(at: index) }
 					)
 				}
-			}.frame(maxWidth: .infinity)
+			}
+			.frame(maxWidth: .infinity)
 				.padding()
 				.background{
 					RoundedRectangle(cornerRadius: 12)
@@ -88,7 +89,7 @@ struct PhotosAndVideosView: View {
 		.onChange(of: selectedMediaModel) { _, newValue in
 			guard newValue.isEmpty && !imagesAreLoading else { return }
 			selectedItems.removeAll()
-		}
+		}.animation(.spring, value: (selectedMediaModel.isEmpty && !imagesAreLoading))
 	}
 
 	private func removeItems(at position: Int) {
