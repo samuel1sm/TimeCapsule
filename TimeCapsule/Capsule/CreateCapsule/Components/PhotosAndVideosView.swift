@@ -60,7 +60,7 @@ struct PhotosAndVideosView: View {
 						selectedMediaModel: $selectedMediaModel,
 						isShowingPhotoPicker: $isShowingPhotoPicker,
 						imagesAreLoading: imagesAreLoading,
-						onRemove: { index in removeItems(at: index) }
+						onItemSelectedToRemove: { index in removeItems(at: index) }
 					)
 				}
 			}.frame(maxWidth: .infinity)

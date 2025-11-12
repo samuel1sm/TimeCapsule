@@ -7,7 +7,7 @@ struct ImageScrollerView: View {
 	let imagesAreLoading: Bool
 
 	@State private var width: CGFloat = 100
-	let onRemove: (Int) -> Void
+	let onItemSelectedToRemove: (Int) -> Void
 
 	var body: some View {
 		let spacing: CGFloat = 10
@@ -21,25 +21,32 @@ struct ImageScrollerView: View {
 		VStack {
 			ScrollView {
 				LazyVGrid(columns: columns, spacing: spacing) {
-					ForEach(selectedMediaModel.indices, id: \.self) { i in
+					ForEach(Array(selectedMediaModel.enumerated()), id: \.element.identifier) { (i, model) in
 						ZStack(alignment: .topTrailing) {
-							let model = selectedMediaModel[i]
 							LocalVideoPlayerView(model: model)
 								.frame(width: itemWidth, height: itemWidth)
 								.clipped()
 								.cornerRadius(8)
 							Button {
-								onRemove(i)
+								withAnimation(.spring(response: 0.35, dampingFraction: 0.85, blendDuration: 0.2)) {
+									onItemSelectedToRemove(i)
+								}
 							} label: {
 								Image(systemName: "x.circle")
 									.tint(.white)
 									.padding(.all, 4)
 									.background(.black.opacity(0.6))
 									.clipShape(.circle)
-							}.padding(2)
+							}
+							.padding(2)
 						}
+						.transition(.opacity.combined(with: .scale))
 					}
 				}
+				.animation(
+					.spring(response: 0.35, dampingFraction: 0.85, blendDuration: 0.2),
+					value: selectedMediaModel
+				)
 			}
 			.scrollDisabled(selectedMediaModel.count <= 16)
 			.frame(height: gridHeight)
@@ -73,4 +80,3 @@ struct ImageScrollerView: View {
 		}
 	}
 }
-
