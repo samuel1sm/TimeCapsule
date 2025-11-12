@@ -1,34 +1,6 @@
 import SwiftUI
 import PhotosUI
-import UniformTypeIdentifiers
 import AVKit
-
-private struct PickedVideo: Transferable {
-	let url: URL
-
-	static var transferRepresentation: some TransferRepresentation {
-		FileRepresentation(contentType: .movie) { movie in
-			SentTransferredFile(movie.url)
-		} importing: { received in
-			let (folder, fileManager) = await FileManager.getTemporaryPathAndManager()
-
-			// 3) Build unique file name
-			let ext = received.file.pathExtension.isEmpty ? "mov" : received.file.pathExtension
-			let fileName = UUID().uuidString + "." + ext
-			let destination = folder.appendingPathComponent(fileName)
-
-			// 4) Replace if somehow exists
-			if fileManager.fileExists(atPath: destination.path) {
-				try fileManager.removeItem(at: destination)
-			}
-
-			// 5) Copy from the security-scoped temp into our persistent dir
-			try fileManager.copyItem(at: received.file, to: destination)
-			return .init(url: destination)
-		}
-	}
-}
-
 
 struct PhotosAndVideosView: View {
 	@Binding var selectedMediaModel: [SelectedMediaModel]
@@ -112,7 +84,7 @@ struct PhotosAndVideosView: View {
 							return cached
 						}
 
-						if let movie = try? await item.loadTransferable(type: PickedVideo.self) {
+						if let movie = try? await item.loadTransferable(type: TemporaryPickedVideo.self) {
 							let model = SelectedMediaModel(
 								type: .video,
 								url: movie.url,
