@@ -3,7 +3,6 @@ import Observation
 
 @Observable
 final class CreateCapsuleViewModel {
-	public static var capsuleID: UUID?
 
     // Form fields
     var title: String = ""
@@ -12,9 +11,7 @@ final class CreateCapsuleViewModel {
     var isPrivate: Bool = true
 	var selectedMedia: [SelectedMediaModel] = []
 
-	init() {
-		CreateCapsuleViewModel.capsuleID = .init()
-	}
+	private let capsuleID = UUID()
 
     // Derived state
     var canSeal: Bool {

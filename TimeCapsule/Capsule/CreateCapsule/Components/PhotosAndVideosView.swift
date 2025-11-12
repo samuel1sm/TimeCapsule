@@ -10,7 +10,7 @@ private struct PickedVideo: Transferable {
 		FileRepresentation(contentType: .movie) { movie in
 			SentTransferredFile(movie.url)
 		} importing: { received in
-			let (folder, fileManager) = await FileManager.getPathAndManager()
+			let (folder, fileManager) = await FileManager.getTemporaryPathAndManager()
 
 			// 3) Build unique file name
 			let ext = received.file.pathExtension.isEmpty ? "mov" : received.file.pathExtension
@@ -99,7 +99,7 @@ struct PhotosAndVideosView: View {
 	}
 
 	private func handleSelectedFiles() {
-		let (timeCapsuleFolder, _) = FileManager.getPathAndManager()
+		let (timeCapsuleFolder, _) = FileManager.getTemporaryPathAndManager()
 
 		let preCachedItems = importedItemsCache
 		imagesAreLoading = true
