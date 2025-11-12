@@ -54,18 +54,41 @@ struct PhotosAndVideosView: View {
 			}
 
 			VStack(spacing: 16) {
-				notLoadingViews()
+				if selectedMediaModel.isEmpty && !imagesAreLoading {
+					EmptyMediaView { isShowingPhotoPicker = true }
+				} else {
+					ImageViewBuilder()
+				}
 			}.frame(maxWidth: .infinity)
 				.padding()
 				.background{
 					RoundedRectangle(cornerRadius: 12)
 						.strokeBorder(Color(.systemGray4), style: StrokeStyle(lineWidth: 1, dash: [4]))
 				}
+		}.photosPicker(
+			isPresented: $isShowingPhotoPicker,
+			selection: $selectedItems,
+			matching: .any(of: [.images, .videos]),
+			preferredItemEncoding: .current
+		).onChange(of: isShowingPhotoPicker) { _, isOpen in
+			if isOpen {
+				oldSelectedItems = selectedItems
+				return
+			}
+			guard oldSelectedItems != selectedItems else {
+				oldSelectedItems.removeAll()
+				return
+			}
+			handleSelectedFiles()
+		}
+		.onChange(of: selectedMediaModel) { _, newValue in
+			guard newValue.isEmpty && !imagesAreLoading else { return }
+			selectedItems.removeAll()
 		}
 	}
 
 	@ViewBuilder
-	private func notLoadingViews() -> some View {
+	private func ImageViewBuilder() -> some View {
 		let spacing: CGFloat = 10
 		let columns = Array(repeating: GridItem(.flexible(), spacing: spacing), count: 4)
 		let itemWidth = (width - spacing * 3) / 4
@@ -75,9 +98,6 @@ struct PhotosAndVideosView: View {
 		+ spacing * CGFloat(max(visibleRows - 1, 0))
 
 		VStack {
-			if selectedMediaModel.isEmpty && !imagesAreLoading{
-				EmptyMediaView { isShowingPhotoPicker = true }
-			} else {
 				ScrollView {
 					LazyVGrid(columns: columns, spacing: spacing) {
 						ForEach(selectedMediaModel.indices, id: \.self) { i in
@@ -129,27 +149,6 @@ struct PhotosAndVideosView: View {
 					.contentShape(Rectangle())
 					.onTapGesture { isShowingPhotoPicker = true }
 				}
-			}
-		}.photosPicker(
-			isPresented: $isShowingPhotoPicker,
-			selection: $selectedItems,
-			matching: .any(of: [.images, .videos]),
-			preferredItemEncoding: .current
-		)
-		.onChange(of: isShowingPhotoPicker) { _, isOpen in
-			if isOpen {
-				oldSelectedItems = selectedItems
-				return
-			}
-			guard oldSelectedItems != selectedItems else {
-				oldSelectedItems.removeAll()
-				return
-			}
-			handleSelectedFiles()
-		}
-		.onChange(of: selectedMediaModel) { _, newValue in
-			guard newValue.isEmpty && !imagesAreLoading else { return }
-			selectedItems.removeAll()
 		}
 	}
 
@@ -179,7 +178,6 @@ struct PhotosAndVideosView: View {
 								url: movie.url,
 								identifier: item.hashValue
 							)
-
 							return model
 						}
 
