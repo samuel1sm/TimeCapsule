@@ -10,4 +10,5 @@ struct SelectedMediaModel: Equatable {
 
 	let type: MediaTypes
 	let url: URL
+	let identifier: Int
 }

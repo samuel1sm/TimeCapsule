@@ -61,7 +61,8 @@ struct LocalVideoPlayerView: View {
 	LocalVideoPlayerView(
 		model: .init(
 			type: .image,
-			url: URL(string: "https://live.staticflickr.com/9/8865/17270333843_bb7eae34ef_z.jpg")!
+			url: URL(string: "https://live.staticflickr.com/9/8865/17270333843_bb7eae34ef_z.jpg")!,
+			identifier: 0
 		)
 	)
 }

@@ -13,9 +13,9 @@ struct CapsulesSummary: View {
 //		.init(title: "Mountain Adventure",
 //			  openDate: Calendar.current.date(byAdding: .day, value: 230, to: .now)!,
 //			  imageName: "capsule_mountain"),
-		.init(title: "City Nights",
-			  openDate: Calendar.current.date(byAdding: .day, value: 65, to: .now)!,
-			  imageName: "capsule_city")
+//		.init(title: "City Nights",
+//			  openDate: Calendar.current.date(byAdding: .day, value: 65, to: .now)!,
+//			  imageName: "capsule_city")
 	]
 	
 	@State private var path = NavigationPath()

@@ -29,6 +29,7 @@ private struct PickedVideo: Transferable {
 	}
 }
 
+
 struct PhotosAndVideosView: View {
 	@Binding var selectedMediaModel: [SelectedMediaModel]
 	@State private var selectedItems: [PhotosPickerItem] = []
@@ -36,6 +37,7 @@ struct PhotosAndVideosView: View {
 	@State private var width: CGFloat = 100
 	@State private var imagesAreLoading = false
 	@State private var isShowingPhotoPicker = false
+	@State private var importedItemsCache: [Int: SelectedMediaModel] = [:]
 
 	var body: some View {
 		VStack(alignment: .leading, spacing: 8) {
@@ -72,63 +74,42 @@ struct PhotosAndVideosView: View {
 		let gridHeight = itemWidth * CGFloat(visibleRows)
 		+ spacing * CGFloat(max(visibleRows - 1, 0))
 
-		if !selectedMediaModel.isEmpty {
-			ScrollView {
-				LazyVGrid(columns: columns, spacing: spacing) {
-					ForEach(selectedMediaModel.indices, id: \.self) { i in
-						ZStack(alignment: .topTrailing) {
-							let model = selectedMediaModel[i]
-							LocalVideoPlayerView(model: model)
-								.frame(width: itemWidth, height: itemWidth)
-								.clipped()
-								.cornerRadius(8)
-							Button {
-								selectedMediaModel.remove(at: i)
-								selectedItems.remove(at: i)
-							} label: {
-								Image(systemName: "x.circle")
-									.tint(.white)
-									.padding(.all, 4)
-									.background(.black.opacity(0.6))
-									.clipShape(.circle)
-							}.padding(2)
+		VStack {
+			if selectedMediaModel.isEmpty && !imagesAreLoading{
+				EmptyMediaView { isShowingPhotoPicker = true }
+			} else {
+				ScrollView {
+					LazyVGrid(columns: columns, spacing: spacing) {
+						ForEach(selectedMediaModel.indices, id: \.self) { i in
+							ZStack(alignment: .topTrailing) {
+								let model = selectedMediaModel[i]
+								LocalVideoPlayerView(model: model)
+									.frame(width: itemWidth, height: itemWidth)
+									.clipped()
+									.cornerRadius(8)
+								Button {
+									removeItems(at: i)
+								} label: {
+									Image(systemName: "x.circle")
+										.tint(.white)
+										.padding(.all, 4)
+										.background(.black.opacity(0.6))
+										.clipShape(.circle)
+								}.padding(2)
+							}
 						}
 					}
 				}
-			}
-			.scrollDisabled(selectedMediaModel.count <= 16)
-			.frame(height: gridHeight)
-			.overlay {
-				GeometryReader { proxy in
-					Color.clear.task(id: proxy.size) {
-						width = proxy.size.width
+				.scrollDisabled(selectedMediaModel.count <= 16)
+				.frame(height: gridHeight)
+				.overlay {
+					GeometryReader { proxy in
+						Color.clear.task(id: proxy.size) {
+							width = proxy.size.width
+						}
 					}
 				}
-			}
-		}
 
-		Group {
-			if selectedMediaModel.isEmpty {
-				VStack(spacing: 12) {
-					Image(systemName: "arrow.up.circle")
-						.font(.system(size: 36))
-						.foregroundColor(Color.purple)
-					Text("Add photos or videos")
-						.font(.subheadline)
-						.foregroundColor(.primary)
-					Text("Tap to upload media")
-						.font(.footnote)
-						.foregroundColor(.gray)
-					HStack(spacing: 16) {
-						Image(systemName: "photo.on.rectangle")
-						Image(systemName: "video")
-					}
-					.foregroundColor(.gray)
-				}
-				.frame(maxWidth: .infinity)
-				.contentShape(Rectangle())
-				.onTapGesture { isShowingPhotoPicker = true }
-			} else {
 				if imagesAreLoading {
 					ProgressView()
 						.progressViewStyle(.circular)
@@ -147,9 +128,9 @@ struct PhotosAndVideosView: View {
 					)
 					.contentShape(Rectangle())
 					.onTapGesture { isShowingPhotoPicker = true }
+				}
 			}
-		}
-	}.photosPicker(
+		}.photosPicker(
 			isPresented: $isShowingPhotoPicker,
 			selection: $selectedItems,
 			matching: .any(of: [.images, .videos]),
@@ -167,52 +148,76 @@ struct PhotosAndVideosView: View {
 			handleSelectedFiles()
 		}
 		.onChange(of: selectedMediaModel) { _, newValue in
-			guard newValue.isEmpty else { return }
+			guard newValue.isEmpty && !imagesAreLoading else { return }
 			selectedItems.removeAll()
 		}
-}
+	}
 
-private func handleSelectedFiles() {
-	let (timeCapsuleFolder, _) = FileManager.getPathAndManager()
-	Task(priority: .userInitiated) {
+	private func removeItems(at position: Int) {
+		let model =  selectedMediaModel.remove(at: position)
+		selectedItems.removeAll { $0.hashValue == model.identifier }
+		importedItemsCache.removeValue(forKey: model.identifier)
+	}
+
+	private func handleSelectedFiles() {
+		let (timeCapsuleFolder, _) = FileManager.getPathAndManager()
+
+		let preCachedItems = importedItemsCache
 		imagesAreLoading = true
+		selectedMediaModel = []
+		Task(priority: .userInitiated) {
+			await withTaskGroup(of: SelectedMediaModel?.self) { group in
+				for item in selectedItems {
+					group.addTask {
+						if let cached = preCachedItems[item.hashValue] {
+							return cached
+						}
 
-		await withTaskGroup(of: SelectedMediaModel?.self) { group in
-			for item in selectedItems {
-				group.addTask {
-					// 1) Try fast video path first (no Photos transcoding thanks to .current)
-					if let movie = try? await item.loadTransferable(type: PickedVideo.self) {
-						return SelectedMediaModel(type: .video, url: movie.url)
+						if let movie = try? await item.loadTransferable(type: PickedVideo.self) {
+							let model = SelectedMediaModel(
+								type: .video,
+								url: movie.url,
+								identifier: item.hashValue
+							)
+
+							return model
+						}
+
+						if let data = try? await item.loadTransferable(type: Data.self) {
+							let fileName = UUID().uuidString + ".png"
+							let destination = timeCapsuleFolder.appendingPathComponent(fileName)
+
+							do {
+								try data.write(to: destination, options: [.atomic])
+								let model = SelectedMediaModel(
+									type: .image,
+									url: destination,
+									identifier: item.hashValue
+								)
+								return model
+							} catch {
+								print("Failed to save image:", error)
+							}
+						}
+						return nil
 					}
+				}
 
-					// 2) Fallback to image: write bytes directly without decoding to UIImage
-					if let data = try? await item.loadTransferable(type: Data.self) {
-						let fileName = UUID().uuidString + ".png"
-						let destination = timeCapsuleFolder.appendingPathComponent(fileName)
-						do {
-							try data.write(to: destination, options: [.atomic])
-							return SelectedMediaModel(type: .image, url: destination)
-						} catch {
-							print("Failed to save image:", error)
+				for await result in group {
+					if let model = result {
+						await MainActor.run {
+							importedItemsCache[model.identifier] = model
+							selectedMediaModel.append(model)
 						}
 					}
-					return nil
+				}
+
+				await MainActor.run {
+					imagesAreLoading = false
 				}
 			}
-
-			// Progressive UI updates: append items as they finish, for better perceived speed
-			for await result in group {
-				if let model = result {
-					await MainActor.run {
-						selectedMediaModel.append(model)
-					}
-				}
-			}
-
-			await MainActor.run { imagesAreLoading = false }
 		}
 	}
-}
 }
 
 private struct PhotosAndVideosPreviewHost: View {
