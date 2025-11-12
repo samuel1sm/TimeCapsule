@@ -1,8 +1,6 @@
 import SwiftUI
 
 struct HomeView: View {
-	@State var models = [SelectedMediaModel]()
-
 	var body: some View {
 		TabView {
 			// Home tab
@@ -11,7 +9,7 @@ struct HomeView: View {
 					Label("Home", systemImage: "house")
 				}
 
-			PhotosAndVideosView(selectedMediaModel: $models)
+			CapsulesSummary()
 				.tabItem {
 					Label("Capsule", systemImage: "capsule.lefthalf.filled")
 				}
