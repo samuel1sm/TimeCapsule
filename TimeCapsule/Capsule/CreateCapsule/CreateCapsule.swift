@@ -3,6 +3,7 @@ import PhotosUI
 
 struct CreateCapsule: View {
 	@State private var viewModel = CreateCapsuleViewModel()
+	@FocusState private var messageIsFocused: Bool
 
 	var body: some View {
 		ScrollView {
@@ -24,6 +25,7 @@ struct CreateCapsule: View {
 						.padding(8)
 						.background(Color(.systemGray6))
 						.cornerRadius(10)
+						.focused($messageIsFocused)
 						.overlay (
 							Group {
 								if viewModel.message.isEmpty {
@@ -61,6 +63,8 @@ struct CreateCapsule: View {
 					Image(systemName: "arrow.trianglehead.counterclockwise")
 				}
 			}
+		}.onTapGesture {
+			messageIsFocused = false
 		}
 	}
 }

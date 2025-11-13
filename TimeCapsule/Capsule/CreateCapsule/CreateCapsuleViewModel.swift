@@ -25,8 +25,22 @@ final class CreateCapsuleViewModel {
     }
 
     func seal() {
-        // TODO: persist / call API
+		print("sealing")
+		Task {
+			do {
+				let saved = try await saveSelectedFiles()
+				print(saved)
+			} catch {
+				print("error: \(error)")
+			}
+		}
     }
+
+	private func saveSelectedFiles() async throws -> [PersistedFilesModel] {
+		let service = ServicesSingletons.getFilePersistenceService()
+		let files = selectedMedia.map(\.persistenceFilesModel)
+		return try await service.saveFiles(at: capsuleID, files: files)
+	}
 
     func reset() {
         title = ""
