@@ -2,7 +2,7 @@ import Foundation
 
 struct CapsuleItem: Identifiable {
 
-	let id = UUID()
+	let id: UUID
 	let title: String
 	let openDate: Date
 	let firstImageURl: URL?

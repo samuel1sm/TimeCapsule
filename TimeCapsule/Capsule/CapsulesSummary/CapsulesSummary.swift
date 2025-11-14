@@ -7,7 +7,8 @@ enum CapsuleRoute: Hashable {
 
 struct CapsulesSummary: View {
 
-	@Query var capsules: [CapsuleModel]
+	@Query var capsulesData: [CapsuleModel]
+	@State private var capsuleItems: [CapsuleItem] = []
 	@State private var path = NavigationPath()
 
 	var body: some View {
@@ -25,7 +26,7 @@ struct CapsulesSummary: View {
 						.padding(.top)
 
 						Group {
-							if capsules.isEmpty {
+							if capsuleItems.isEmpty {
 								VStack(spacing: 20) {
 									Image(systemName: "archivebox")
 										.font(.system(size: 52, weight: .regular))
@@ -62,9 +63,9 @@ struct CapsulesSummary: View {
 								.padding(.horizontal)
 								.padding(.top, 20)
 							} else {
-								VStack(spacing: 16) {
-									ForEach(capsules) { capsule in
-										CapsuleCardView(item: capsule.toCapsuleItem())
+								LazyVStack(spacing: 16) {
+									ForEach(capsuleItems) { capsule in
+										CapsuleCardView(item: capsule)
 									}
 								}
 								.padding(.horizontal)
@@ -75,7 +76,7 @@ struct CapsulesSummary: View {
 				}
 				.frame(maxWidth: .infinity)
 
-				if !capsules.isEmpty {
+				if !capsuleItems.isEmpty {
 					Button(action: { path.append(CapsuleRoute.createCapsule) }) {
 						Image(systemName: "plus")
 							.font(.system(size: 28))
@@ -100,7 +101,9 @@ struct CapsulesSummary: View {
 					CreateCapsule()
 				}
 			}
-
+			.onChange(of: capsulesData, initial: true) { _, newValue in
+				capsuleItems = newValue.map(\.capsuleItem)
+			}
 			.background(Color(.systemGroupedBackground))
 		}
 	}

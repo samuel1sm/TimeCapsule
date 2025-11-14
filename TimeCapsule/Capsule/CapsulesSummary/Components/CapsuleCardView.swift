@@ -74,6 +74,7 @@ struct CapsuleCardView: View {
 #Preview {
 	CapsuleCardView(
 		item: .init(
+			id: UUID(),
 			title: "Sample Capsule",
 			openDate: .now.addingTimeInterval(3600 * 24 * 3),
 			firstImageURl: nil // Or URL(string: "https://live.staticflickr.com/9/8865/17270333843_bb7eae34ef_z.jpg")

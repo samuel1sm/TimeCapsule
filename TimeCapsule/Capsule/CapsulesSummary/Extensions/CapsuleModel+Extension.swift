@@ -1,6 +1,11 @@
 extension CapsuleModel {
 
-	func toCapsuleItem() -> CapsuleItem {
-		.init(title: title, openDate: date, firstImageURl: persistedFIles.first?.path)
+	var capsuleItem: CapsuleItem {
+		.init(
+			id: capsuleID,
+			title: title,
+			openDate: date,
+			firstImageURl: persistedFIles.first?.path
+		)
 	}
 }
