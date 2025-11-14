@@ -10,7 +10,7 @@ struct HomeView: View {
 					Label("Home", systemImage: "house")
 				}
 
-			CreateCapsule()
+			CapsulesSummary()
 				.tabItem {
 					Label("Capsule", systemImage: "capsule.lefthalf.filled")
 				}

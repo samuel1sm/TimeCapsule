@@ -6,6 +6,7 @@ struct CreateCapsule: View {
 	@State private var viewModel = CreateCapsuleViewModel()
 	@FocusState private var messageIsFocused: Bool
 	@Environment(\.modelContext) var modelContext
+	@Environment(\.dismiss) private var dismiss
 
 	var body: some View {
 		ScrollView {
@@ -46,13 +47,20 @@ struct CreateCapsule: View {
 				Spacer()
 //				PrivacySettingsView(isPrivate: $viewModel.isPrivate)
 
-				Button { viewModel.seal(with: modelContext) } label: {
+				Button {
+					Task {
+						let success = await viewModel.seal(with: modelContext)
+						if success {
+							dismiss() // Pop back to CapsulesSummary
+						}
+					}
+				} label: {
 					HStack { Text("Seal Capsule") }
 						.frame(height: 60)
 						.frame(maxWidth: .infinity)
 				}
 				.buttonStyle(.sealCapsuleGradient)
-				.disabled(!viewModel.canSeal)
+				.disabled(!viewModel.canSeal || viewModel.isLoading)
 			}
 			.padding()
 		}
@@ -64,9 +72,20 @@ struct CreateCapsule: View {
 				} label:  {
 					Image(systemName: "arrow.trianglehead.counterclockwise")
 				}
+				.disabled(viewModel.isLoading)
 			}
-		}.onTapGesture {
-			messageIsFocused = false
+		}
+		.onTapGesture { messageIsFocused = false }
+		.overlay {
+			if viewModel.isLoading {
+				ZStack {
+					Color.black.opacity(0.2).ignoresSafeArea()
+					ProgressView("Saving…")
+						.padding()
+						.background(.ultraThinMaterial, in: RoundedRectangle(cornerRadius: 12))
+				}
+				.transition(.opacity)
+			}
 		}
 	}
 }

@@ -11,9 +11,8 @@ final class CreateCapsuleViewModel {
     var unlockDate: Date? = nil
     var isPrivate: Bool = true
 	var selectedMedia: [SelectedMediaModel] = []
-
+	var isLoading = false
 	private let capsuleID = UUID()
-
 
     // Derived state
     var canSeal: Bool {
@@ -26,26 +25,30 @@ final class CreateCapsuleViewModel {
         for i in offsets.reversed() { selectedMedia.remove(at: i) }
     }
 
-	func seal(with context: ModelContext) {
+	// Returns true on success so the view can dismiss itself.
+	func seal(with context: ModelContext) async -> Bool {
 		guard let unlockDate else {
 			print("error: date invalid")
-			return
+			return false
 		}
-		Task {
-			do {
-				let savedFiles = try await saveSelectedFiles()
-				context.insert(
-					CapsuleModel(
-						capsuleID: capsuleID,
-						title: title,
-						description: message,
-						date: unlockDate,
-						persistedFIles: savedFiles.map(\.savedMediaModel)
-					)
+		isLoading = true
+		defer { isLoading = false }
+
+		do {
+			let savedFiles = try await saveSelectedFiles()
+			context.insert(
+				CapsuleModel(
+					capsuleID: capsuleID,
+					title: title,
+					description: message,
+					date: unlockDate,
+					persistedFIles: savedFiles.map(\.savedMediaModel)
 				)
-			} catch {
-				print("error: \(error)")
-			}
+			)
+			return true
+		} catch {
+			print("error: \(error)")
+			return false
 		}
     }
 
