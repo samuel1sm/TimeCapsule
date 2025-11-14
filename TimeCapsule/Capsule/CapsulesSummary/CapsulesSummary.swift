@@ -37,7 +37,7 @@ struct CapsulesSummary: View {
 						
 						VStack(spacing: 16) {
 							ForEach(capsules) { capsule in
-								CapsuleCard(item: capsule)
+								CapsuleCardView(item: capsule.toCapsuleItem())
 							}
 						}
 						.padding(.horizontal)

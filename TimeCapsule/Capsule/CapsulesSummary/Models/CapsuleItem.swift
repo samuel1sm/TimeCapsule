@@ -5,7 +5,7 @@ struct CapsuleItem: Identifiable {
 	let id = UUID()
 	let title: String
 	let openDate: Date
-	let imageName: String
+	let firstImageURl: URL?
 
 	func timeRemainingString(from reference: Date = .now) -> String {
 		let cal = Calendar.current
