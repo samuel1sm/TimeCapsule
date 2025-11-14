@@ -25,7 +25,7 @@ class FilePersistenceService: FilePersistenceServiceProtocol {
 						}
 
 						try manager.copyItem(at: file.temporaryPath, to: newPath)
-						return .init(id: newID, path: newPath, type: file.mediaType)
+						return .init(id: newID, path: newPath, mediaType: file.mediaType)
 					}
 				}
 

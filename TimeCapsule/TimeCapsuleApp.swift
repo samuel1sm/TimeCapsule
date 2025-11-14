@@ -1,17 +1,11 @@
-//
-//  TimeCapsuleApp.swift
-//  TimeCapsule
-//
-//  Created by Samuel Martins on 27/10/25.
-//
-
 import SwiftUI
+import SwiftData
 
 @main
 struct TimeCapsuleApp: App {
     var body: some Scene {
         WindowGroup {
             HomeView()
-        }
+		}.modelContainer(for: [CapsuleModel.self])
     }
 }

@@ -1,9 +1,11 @@
 import SwiftUI
 import PhotosUI
+import SwiftData
 
 struct CreateCapsule: View {
 	@State private var viewModel = CreateCapsuleViewModel()
 	@FocusState private var messageIsFocused: Bool
+	@Environment(\.modelContext) var modelContext
 
 	var body: some View {
 		ScrollView {
@@ -44,7 +46,7 @@ struct CreateCapsule: View {
 				Spacer()
 //				PrivacySettingsView(isPrivate: $viewModel.isPrivate)
 
-				Button { viewModel.seal() } label: {
+				Button { viewModel.seal(with: modelContext) } label: {
 					HStack { Text("Seal Capsule") }
 						.frame(height: 60)
 						.frame(maxWidth: .infinity)
@@ -70,5 +72,5 @@ struct CreateCapsule: View {
 }
 
 #Preview {
-	CreateCapsule()
+    CreateCapsule()
 }

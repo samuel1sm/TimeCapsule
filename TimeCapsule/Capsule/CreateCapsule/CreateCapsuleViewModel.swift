@@ -1,10 +1,11 @@
 import SwiftUI
 import Observation
+import SwiftData
 
 @Observable
 final class CreateCapsuleViewModel {
 
-    // Form fields
+	// Form fields
     var title: String = ""
     var message: String = ""
     var unlockDate: Date? = nil
@@ -12,6 +13,7 @@ final class CreateCapsuleViewModel {
 	var selectedMedia: [SelectedMediaModel] = []
 
 	private let capsuleID = UUID()
+
 
     // Derived state
     var canSeal: Bool {
@@ -24,12 +26,23 @@ final class CreateCapsuleViewModel {
         for i in offsets.reversed() { selectedMedia.remove(at: i) }
     }
 
-    func seal() {
-		print("sealing")
+	func seal(with context: ModelContext) {
+		guard let unlockDate else {
+			print("error: date invalid")
+			return
+		}
 		Task {
 			do {
-				let saved = try await saveSelectedFiles()
-				print(saved)
+				let savedFiles = try await saveSelectedFiles()
+				context.insert(
+					CapsuleModel(
+						capsuleID: capsuleID,
+						title: title,
+						description: message,
+						date: unlockDate,
+						persistedFIles: savedFiles.map(\.savedMediaModel)
+					)
+				)
 			} catch {
 				print("error: \(error)")
 			}

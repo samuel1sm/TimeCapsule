@@ -1,23 +1,13 @@
 import SwiftUI
+import SwiftData
 
 enum CapsuleRoute: Hashable {
 	case createCapsule
 }
 
 struct CapsulesSummary: View {
-	// Sample data for preview / development
-	private let capsules: [CapsuleItem] = [
-//		.init(title: "Summer 2025 Memories",
-//			  openDate: Calendar.current.date(byAdding: .day, value: 728, to: .now)!,
-//			  imageName: "capsule_summer"),
-//		.init(title: "Mountain Adventure",
-//			  openDate: Calendar.current.date(byAdding: .day, value: 230, to: .now)!,
-//			  imageName: "capsule_mountain"),
-//		.init(title: "City Nights",
-//			  openDate: Calendar.current.date(byAdding: .day, value: 65, to: .now)!,
-//			  imageName: "capsule_city")
-	]
-	
+
+	@Query var capsules: [CapsuleModel]
 	@State private var path = NavigationPath()
 	
 	var body: some View {

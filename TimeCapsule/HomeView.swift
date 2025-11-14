@@ -1,4 +1,5 @@
 import SwiftUI
+import SwiftData
 
 struct HomeView: View {
 	var body: some View {
@@ -9,7 +10,7 @@ struct HomeView: View {
 					Label("Home", systemImage: "house")
 				}
 
-			CapsulesSummary()
+			CreateCapsule()
 				.tabItem {
 					Label("Capsule", systemImage: "capsule.lefthalf.filled")
 				}

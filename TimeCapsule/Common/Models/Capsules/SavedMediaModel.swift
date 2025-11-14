@@ -1,13 +1,8 @@
-//
-//  PersistedFilesModel.swift
-//  TimeCapsule
-//
-//  Created by Samuel Martins on 14/11/25.
-//
-
+import Foundation
+import SwiftData
 
 @Model
-class PersistedFilesModel {
+class SavedMediaModel {
 
 	var id: UUID
 	var path: URL
