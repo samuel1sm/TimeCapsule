@@ -2,6 +2,8 @@ import SwiftUI
 
 struct CapsuleCardView: View {
 	let item: CapsuleItem
+	var showsDelete: Bool = false
+	var onDelete: (() -> Void)? = nil
 
 	var body: some View {
 		ZStack(alignment: .bottomLeading) {
@@ -49,6 +51,24 @@ struct CapsuleCardView: View {
 				)
 			)
 			.clipShape(RoundedRectangle(cornerRadius: 28, style: .continuous))
+			.overlay(alignment: .topTrailing) {
+				if showsDelete {
+					Button {
+						onDelete?()
+					} label: {
+						Image(systemName: "xmark.circle.fill")
+							.font(.system(size: 24, weight: .semibold))
+							.symbolRenderingMode(.palette)
+							.foregroundStyle(.white, .red)
+							.padding(6)
+							.background(.ultraThinMaterial, in: Circle())
+					}
+					.buttonStyle(.plain)
+					.accessibilityLabel("Delete capsule")
+					.transition(.scale.combined(with: .opacity))
+					.padding(8)
+				}
+			}
 
 			VStack(alignment: .leading, spacing: 8) {
 				Text(item.title)
@@ -77,7 +97,9 @@ struct CapsuleCardView: View {
 			id: UUID(),
 			title: "Sample Capsule",
 			openDate: .now.addingTimeInterval(3600 * 24 * 3),
-			firstImageURl: nil // Or URL(string: "https://live.staticflickr.com/9/8865/17270333843_bb7eae34ef_z.jpg")
-		)
+			firstImageURl: nil
+		),
+		showsDelete: true,
+		onDelete: {}
 	)
 }

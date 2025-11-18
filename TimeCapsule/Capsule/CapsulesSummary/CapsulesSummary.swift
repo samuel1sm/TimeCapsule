@@ -8,8 +8,10 @@ enum CapsuleRoute: Hashable {
 struct CapsulesSummary: View {
 
 	@Query var capsulesData: [CapsuleModel]
-	@State private var capsuleItems: [CapsuleItem] = []
 	@State private var path = NavigationPath()
+	@Environment(\.modelContext) private var modelContext
+
+	@State private var isDeleteMode = false
 
 	var body: some View {
 		NavigationStack(path: $path) {
@@ -26,7 +28,7 @@ struct CapsulesSummary: View {
 						.padding(.top)
 
 						Group {
-							if capsuleItems.isEmpty {
+							if capsulesData.isEmpty {
 								VStack(spacing: 20) {
 									Image(systemName: "archivebox")
 										.font(.system(size: 52, weight: .regular))
@@ -64,19 +66,30 @@ struct CapsulesSummary: View {
 								.padding(.top, 20)
 							} else {
 								LazyVStack(spacing: 16) {
-									ForEach(capsuleItems) { capsule in
-										CapsuleCardView(item: capsule)
+									ForEach(capsulesData) { capsule in
+										CapsuleCardView(
+											item: capsule.capsuleItem,
+											showsDelete: isDeleteMode
+										) {
+											removeCapsule(id: capsule.capsuleID)
+										}
+										.onLongPressGesture(minimumDuration: 0.5) {
+											withAnimation(.spring()) {
+												isDeleteMode = true
+											}
+										}
 									}
 								}
 								.padding(.horizontal)
 								.padding(.bottom, 10)
+								.animation(.spring(), value: isDeleteMode)
 							}
 						}
 					}
 				}
 				.frame(maxWidth: .infinity)
 
-				if !capsuleItems.isEmpty {
+				if !capsulesData.isEmpty {
 					Button(action: { path.append(CapsuleRoute.createCapsule) }) {
 						Image(systemName: "plus")
 							.font(.system(size: 28))
@@ -95,16 +108,30 @@ struct CapsulesSummary: View {
 					.padding(.trailing, 20)
 					.padding(.bottom, 28)
 				}
-			}.navigationDestination(for: CapsuleRoute.self) { route in
+			}.onTapGesture {
+				if isDeleteMode {
+					withAnimation(.spring()) {
+						isDeleteMode = false
+					}
+				}
+			}
+			.navigationDestination(for: CapsuleRoute.self) { route in
 				switch route {
 				case .createCapsule:
 					CreateCapsule()
 				}
 			}
-			.onChange(of: capsulesData, initial: true) { _, newValue in
-				capsuleItems = newValue.map(\.capsuleItem)
-			}
 			.background(Color(.systemGroupedBackground))
+		}
+	}
+
+	private func removeCapsule(id: UUID) {
+		guard let model = capsulesData.first(where: { $0.capsuleID == id }) else { return }
+		modelContext.delete(model)
+		do {
+			try modelContext.save()
+		} catch {
+			print("Failed to delete capsule:", error)
 		}
 	}
 }
