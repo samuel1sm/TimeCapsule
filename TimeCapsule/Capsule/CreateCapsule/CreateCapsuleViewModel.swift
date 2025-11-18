@@ -39,9 +39,10 @@ final class CreateCapsuleViewModel {
 			let model = CapsuleModel(
 				capsuleID: capsuleID,
 				title: title,
-				description: message,
+				details: message,
 				date: unlockDate,
-				persistedFIles: savedFiles.map(\.savedMediaModel)
+				persistedFIles: savedFiles.map(\.savedMediaModel),
+				creationDate: .now
 			)
 			context.insert(model)
 			try context.save()
