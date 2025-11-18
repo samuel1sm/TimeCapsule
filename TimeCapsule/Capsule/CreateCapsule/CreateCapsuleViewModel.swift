@@ -36,15 +36,15 @@ final class CreateCapsuleViewModel {
 
 		do {
 			let savedFiles = try await saveSelectedFiles()
-			context.insert(
-				CapsuleModel(
-					capsuleID: capsuleID,
-					title: title,
-					description: message,
-					date: unlockDate,
-					persistedFIles: savedFiles.map(\.savedMediaModel)
-				)
+			let model = CapsuleModel(
+				capsuleID: capsuleID,
+				title: title,
+				description: message,
+				date: unlockDate,
+				persistedFIles: savedFiles.map(\.savedMediaModel)
 			)
+			context.insert(model)
+			try context.save()
 			return true
 		} catch {
 			print("error: \(error)")

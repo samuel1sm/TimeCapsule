@@ -7,7 +7,7 @@ enum CapsuleRoute: Hashable {
 
 struct CapsulesSummary: View {
 
-	@Query var capsulesData: [CapsuleModel]
+	@Query(sort: \CapsuleModel.date, order: .forward) var capsulesData: [CapsuleModel]
 	@State private var path = NavigationPath()
 	@Environment(\.modelContext) private var modelContext
 
