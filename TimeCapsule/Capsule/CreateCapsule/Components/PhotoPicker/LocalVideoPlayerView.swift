@@ -29,22 +29,9 @@ struct LocalVideoPlayerView: View {
 						isLoading = false
 					}
 			} else if model.type == .image {
-				AsyncImage(url: model.url) { phase in
-					if case let .success(image) = phase {
-						image
-							.resizable()
-							.scaledToFill()
-							.onAppear {
-								isLoading = false
-							}
-					} else {
-						ProgressView()
-							.progressViewStyle(.circular)
-							.onAppear {
-								isLoading = false
-							}
-					}
-				}
+				LocalFileImage(url: model.url)
+					.scaledToFill()
+					.onAppear { isLoading = false }
 			}
 		}
 		.onAppear {
