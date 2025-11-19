@@ -7,7 +7,7 @@ class CapsuleModel {
 	var capsuleID: UUID
 	var title: String
 	var details: String
-	var date: Date
+	var openDate: Date
 	var persistedFIles: [SavedMediaModel]
 	var creationDate: Date
 
@@ -22,7 +22,7 @@ class CapsuleModel {
 		self.capsuleID = capsuleID
 		self.title = title
 		self.details = details
-		self.date = date
+		self.openDate = date
 		self.persistedFIles = persistedFIles
 		self.creationDate = creationDate
 	}

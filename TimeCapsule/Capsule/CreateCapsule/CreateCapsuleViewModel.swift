@@ -2,6 +2,7 @@ import SwiftUI
 import Observation
 import SwiftData
 
+@MainActor
 @Observable
 final class CreateCapsuleViewModel {
 
@@ -36,16 +37,19 @@ final class CreateCapsuleViewModel {
 
 		do {
 			let savedFiles = try await saveSelectedFiles()
+
 			let model = CapsuleModel(
 				capsuleID: capsuleID,
 				title: title,
 				details: message,
 				date: unlockDate,
 				persistedFIles: savedFiles.map(\.savedMediaModel),
-				creationDate: .now
+				creationDate: Date()
 			)
 			context.insert(model)
+
 			try context.save()
+
 			return true
 		} catch {
 			print("error: \(error)")

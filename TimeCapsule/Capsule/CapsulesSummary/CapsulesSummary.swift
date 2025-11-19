@@ -7,8 +7,8 @@ enum CapsuleRoute: Hashable {
 
 struct CapsulesSummary: View {
 
-	@Query(sort: \CapsuleModel.date, order: .forward) var capsulesData: [CapsuleModel]
-	@State private var path = NavigationPath()
+	@Query(sort: \CapsuleModel.openDate, order: .forward) var capsulesData: [CapsuleModel]
+	@State private var path: NavigationPath = NavigationPath()
 	@Environment(\.modelContext) private var modelContext
 
 	@State private var isDeleteMode = false
@@ -42,7 +42,8 @@ struct CapsulesSummary: View {
 											.foregroundStyle(.secondary)
 									}
 									Button {
-										path.append(CapsuleRoute.createCapsule)
+										let route: CapsuleRoute = .createCapsule
+										path.append(route)
 									} label: {
 										HStack(spacing: 8) {
 											Image(systemName: "plus.circle.fill")
@@ -68,11 +69,10 @@ struct CapsulesSummary: View {
 								LazyVStack(spacing: 16) {
 									ForEach(capsulesData) { capsule in
 										CapsuleCardView(
-											item: capsule.capsuleItem,
-											showsDelete: isDeleteMode
-										) {
-											removeCapsule(id: capsule.capsuleID)
-										}
+											item: capsule.toCapsuleItem(),
+											showsDelete: isDeleteMode,
+											onDelete: { removeCapsule(id: capsule.capsuleID) }
+										)
 										.onLongPressGesture(minimumDuration: 0.5) {
 											withAnimation(.spring()) {
 												isDeleteMode = true
@@ -90,7 +90,10 @@ struct CapsulesSummary: View {
 				.frame(maxWidth: .infinity)
 
 				if !capsulesData.isEmpty {
-					Button(action: { path.append(CapsuleRoute.createCapsule) }) {
+					Button(action: {
+						let route: CapsuleRoute = .createCapsule
+						path.append(route)
+					}) {
 						Image(systemName: "plus")
 							.font(.system(size: 28))
 							.foregroundStyle(.white)
