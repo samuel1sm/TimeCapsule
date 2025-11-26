@@ -31,42 +31,10 @@ struct CapsulesSummary: View {
 
 						Group {
 							if capsulesData.isEmpty {
-								VStack(spacing: 20) {
-									Image(systemName: "archivebox")
-										.font(.system(size: 52, weight: .regular))
-										.foregroundStyle(.secondary)
-
-									VStack(spacing: 6) {
-										Text("No Capsules Yet")
-											.font(.title3).bold()
-										Text("Start by creating your first time capsule.")
-											.font(.subheadline)
-											.foregroundStyle(.secondary)
-									}
-									Button {
-										let route: CapsuleRoute = .createCapsule
-										path.append(route)
-									} label: {
-										HStack(spacing: 8) {
-											Image(systemName: "plus.circle.fill")
-											Text("Create New Capsule")
-												.fontWeight(.semibold)
-										}
-										.frame(height: 50)
-										.frame(maxWidth: .infinity)
-									}
-									.buttonStyle(.sealCapsuleGradient)
-									.tint(.pink)
-									.padding(.top, 8)
+								EmptyCapsulesView {
+									let route: CapsuleRoute = .createCapsule
+									path.append(route)
 								}
-								.padding()
-								.frame(maxWidth: .infinity)
-								.background(
-									RoundedRectangle(cornerRadius: 16, style: .continuous)
-										.fill(Color(.secondarySystemGroupedBackground))
-								)
-								.padding(.horizontal)
-								.padding(.top, 20)
 							} else {
 								LazyVStack(spacing: 16) {
 									ForEach(capsulesData) { capsule in
@@ -109,26 +77,10 @@ struct CapsulesSummary: View {
 				.frame(maxWidth: .infinity)
 
 				if !capsulesData.isEmpty {
-					Button(action: {
+					FloatingButtonView {
 						let route: CapsuleRoute = .createCapsule
 						path.append(route)
-					}) {
-						Image(systemName: "plus")
-							.font(.system(size: 28))
-							.foregroundStyle(.white)
-							.padding(16)
-							.background(
-								LinearGradient(
-									colors: [Color.pink, Color.purple],
-									startPoint: .topLeading,
-									endPoint: .bottomTrailing
-								)
-							)
-							.clipShape(Circle())
-							.shadow(radius: 12, y: 6)
 					}
-					.padding(.trailing, 20)
-					.padding(.bottom, 28)
 				}
 			}.onTapGesture {
 				if isDeleteMode {

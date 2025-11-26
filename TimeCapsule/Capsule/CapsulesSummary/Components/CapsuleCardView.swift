@@ -2,6 +2,7 @@ import SwiftUI
 import UIKit
 
 struct CapsuleCardView: View {
+
     let item: CapsuleItem
     var showsDelete: Bool = false
     var onDelete: (() -> Void)? = nil
