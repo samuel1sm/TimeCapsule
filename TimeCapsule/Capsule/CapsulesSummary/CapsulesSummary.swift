@@ -11,66 +11,25 @@ struct CapsulesSummary: View {
 	@State private var path: NavigationPath = NavigationPath()
 	@Environment(\.modelContext) private var modelContext
 
-	@State private var isDeleteMode = false
-	@State private var showDeleteAlert = false
-	@State private var capsuleToDelete: CapsuleModel?
+	@State private var viewModel = CapsulesSummaryViewModel()
 
 	var body: some View {
 		NavigationStack(path: $path) {
 			ZStack(alignment: .bottomTrailing) {
 				ScrollView {
 					VStack(alignment: .leading, spacing: 16) {
-						VStack(alignment: .leading, spacing: 6) {
-							Text("My Capsules")
-								.font(.largeTitle).bold()
-							Text("Your treasured memories")
-								.foregroundStyle(.secondary)
-						}
-						.padding(.horizontal)
-						.padding(.top)
+						CapsuleSummaryHeaderView()
 
-						Group {
-							if capsulesData.isEmpty {
-								EmptyCapsulesView {
-									let route: CapsuleRoute = .createCapsule
-									path.append(route)
-								}
-							} else {
-								LazyVStack(spacing: 16) {
-									ForEach(capsulesData) { capsule in
-										CapsuleCardView(
-											item: capsule.toCapsuleItem(),
-											showsDelete: isDeleteMode,
-											onDelete: { confirmDeletion(of: capsule) }
-										)
-										.onLongPressGesture(minimumDuration: 0.5) {
-											withAnimation(.spring()) {
-												isDeleteMode = true
-											}
-										}
-										.confirmationDialog(
-											"Delete Capsule?",
-											isPresented: $showDeleteAlert,
-											titleVisibility: .visible,
-											presenting: capsuleToDelete
-										) { item in
-											Button("Delete", role: .destructive) {
-												removeCapsule(id: item.capsuleID)
-												capsuleToDelete = nil
-												withAnimation(.spring()) { isDeleteMode = false }
-											}
-											Button("Cancel", role: .cancel) {
-												capsuleToDelete = nil
-											}
-										} message: { item in
-											Text("Are you sure you want to delete “\(item.title)”? This action cannot be undone.")
-										}
-									}
-								}
+						if capsulesData.isEmpty {
+							EmptyCapsulesView {
+								let route: CapsuleRoute = .createCapsule
+								path.append(route)
+							}
+						} else {
+							capsulesList(capsulesData)
 								.padding(.horizontal)
 								.padding(.bottom, 10)
-								.animation(.spring(), value: isDeleteMode)
-							}
+								.animation(.spring(), value: viewModel.isDeleteMode)
 						}
 					}
 				}
@@ -82,10 +41,11 @@ struct CapsulesSummary: View {
 						path.append(route)
 					}
 				}
-			}.onTapGesture {
-				if isDeleteMode {
+			}
+			.onTapGesture {
+				if viewModel.isDeleteMode {
 					withAnimation(.spring()) {
-						isDeleteMode = false
+						viewModel.isDeleteMode = false
 					}
 				}
 			}
@@ -99,18 +59,38 @@ struct CapsulesSummary: View {
 		}
 	}
 
-	private func confirmDeletion(of capsule: CapsuleModel) {
-		capsuleToDelete = capsule
-		showDeleteAlert = true
-	}
-
-	private func removeCapsule(id: UUID) {
-		guard let model = capsulesData.first(where: { $0.capsuleID == id }) else { return }
-		modelContext.delete(model)
-		do {
-			try modelContext.save()
-		} catch {
-			print("Failed to delete capsule:", error)
+	@ViewBuilder
+	private func capsulesList(_ capsules: [CapsuleModel]) -> some View {
+		LazyVStack(spacing: 16) {
+			ForEach(capsules) { capsule in
+				CapsuleCardView(
+					item: capsule.toCapsuleItem(),
+					showsDelete: viewModel.isDeleteMode,
+					onDelete: { viewModel.confirmDeletion(of: capsule) }
+				)
+				.confirmationDialog(
+					"Delete Capsule?",
+					isPresented: $viewModel.showDeleteDialog,
+					titleVisibility: .visible,
+					presenting: viewModel.capsuleToDelete
+				) { capsule in
+					Button("Delete", role: .destructive) {
+						viewModel.performDelete(using: modelContext, from: capsulesData)
+						viewModel.capsuleToDelete = nil
+						withAnimation(.spring()) { viewModel.isDeleteMode = false }
+					}
+					Button("Cancel", role: .cancel) {
+						viewModel.capsuleToDelete = nil
+					}
+				} message: { capsule in
+					Text("Are you sure you want to delete “\(capsule.title)”? This action cannot be undone.")
+				}
+				.onLongPressGesture(minimumDuration: 0.5) {
+					withAnimation(.spring()) {
+						viewModel.isDeleteMode = true
+					}
+				}
+			}
 		}
 	}
 }
