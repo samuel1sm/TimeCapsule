@@ -1,6 +1,12 @@
+import Foundation
+
 extension PersistedFilesModel {
 
 	var savedMediaModel: SavedMediaModel {
-		.init(id: id, path: path, mediaType: mediaType)
+		.init(
+			id: id,
+			fileName: path.lastPathComponent,
+			mediaType: mediaType
+		)
 	}
 }

@@ -5,12 +5,12 @@ import SwiftData
 class SavedMediaModel {
 
 	var id: UUID
-	var path: URL
+	var fileName: String
 	var mediaType: MediaTypes
 
-	init(id: UUID, path: URL, mediaType: MediaTypes) {
+	init(id: UUID, fileName: String, mediaType: MediaTypes) {
 		self.id = id
-		self.path = path
+		self.fileName = fileName
 		self.mediaType = mediaType
 	}
 }
