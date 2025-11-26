@@ -12,6 +12,8 @@ struct CapsulesSummary: View {
 	@Environment(\.modelContext) private var modelContext
 
 	@State private var isDeleteMode = false
+	@State private var showDeleteAlert = false
+	@State private var capsuleToDelete: CapsuleModel?
 
 	var body: some View {
 		NavigationStack(path: $path) {
@@ -71,12 +73,29 @@ struct CapsulesSummary: View {
 										CapsuleCardView(
 											item: capsule.toCapsuleItem(),
 											showsDelete: isDeleteMode,
-											onDelete: { removeCapsule(id: capsule.capsuleID) }
+											onDelete: { confirmDeletion(of: capsule) }
 										)
 										.onLongPressGesture(minimumDuration: 0.5) {
 											withAnimation(.spring()) {
 												isDeleteMode = true
 											}
+										}
+										.confirmationDialog(
+											"Delete Capsule?",
+											isPresented: $showDeleteAlert,
+											titleVisibility: .visible,
+											presenting: capsuleToDelete
+										) { item in
+											Button("Delete", role: .destructive) {
+												removeCapsule(id: item.capsuleID)
+												capsuleToDelete = nil
+												withAnimation(.spring()) { isDeleteMode = false }
+											}
+											Button("Cancel", role: .cancel) {
+												capsuleToDelete = nil
+											}
+										} message: { item in
+											Text("Are you sure you want to delete “\(item.title)”? This action cannot be undone.")
 										}
 									}
 								}
@@ -126,6 +145,11 @@ struct CapsulesSummary: View {
 			}
 			.background(Color(.systemGroupedBackground))
 		}
+	}
+
+	private func confirmDeletion(of capsule: CapsuleModel) {
+		capsuleToDelete = capsule
+		showDeleteAlert = true
 	}
 
 	private func removeCapsule(id: UUID) {
