@@ -8,8 +8,6 @@ struct CapsuleSummaryHeaderView: View {
             Text("Your treasured memories")
                 .foregroundStyle(.secondary)
         }
-        .padding(.horizontal)
-        .padding(.top)
     }
 }
 

@@ -36,12 +36,10 @@ struct EmptyCapsulesView: View {
 			RoundedRectangle(cornerRadius: 16, style: .continuous)
 				.fill(Color(.secondarySystemGroupedBackground))
 		)
-		.padding(.horizontal)
-		.padding(.top, 20)
 	}
 }
 
 #Preview {
 	EmptyCapsulesView { }
-		.padding()
+//		.padding()
 }

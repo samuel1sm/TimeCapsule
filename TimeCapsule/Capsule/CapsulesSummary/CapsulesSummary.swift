@@ -19,6 +19,7 @@ struct CapsulesSummary: View {
 				ScrollView {
 					VStack(alignment: .leading, spacing: 16) {
 						CapsuleSummaryHeaderView()
+							.padding(.top)
 
 						if capsulesData.isEmpty {
 							EmptyCapsulesView {
@@ -27,12 +28,12 @@ struct CapsulesSummary: View {
 							}
 						} else {
 							capsulesList(capsulesData)
-								.padding(.horizontal)
 								.padding(.bottom, 10)
 								.animation(.spring(), value: viewModel.isDeleteMode)
 						}
 					}
 				}
+				.padding(.horizontal)
 				.frame(maxWidth: .infinity)
 
 				if !capsulesData.isEmpty {
