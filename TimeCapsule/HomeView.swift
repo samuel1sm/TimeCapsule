@@ -5,9 +5,9 @@ struct HomeView: View {
 	var body: some View {
 		TabView {
 			// Home tab
-			Text("Home")
+			DailyLogView()
 				.tabItem {
-					Label("Home", systemImage: "house")
+					Label("Daily Log", systemImage: "book")
 				}
 
 			CapsulesSummary()
