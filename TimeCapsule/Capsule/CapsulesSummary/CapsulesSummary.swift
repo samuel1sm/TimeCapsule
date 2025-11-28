@@ -39,7 +39,8 @@ struct CapsulesSummary: View {
 					FloatingButtonView {
 						let route: CapsuleRoute = .createCapsule
 						path.append(route)
-					}
+					}.padding(.trailing, 12)
+					.padding(.bottom, 12)
 				}
 			}
 			.onTapGesture {
@@ -55,6 +56,7 @@ struct CapsulesSummary: View {
 					CreateCapsule()
 				}
 			}
+			.frame(maxWidth: .infinity)
 			.background(Color(.systemGroupedBackground))
 		}
 	}
