@@ -26,26 +26,25 @@ struct InputComposerView: View {
 					.frame(minHeight: initialHeight, maxHeight: 120)
 					.fixedSize(horizontal: false, vertical: true)
 
-				
-				if text.isEmpty {
-					RoundButtonView(systemImageName: "microphone", colors: []) {
-					}
-					.foregroundStyle(.black)
-					.frame(width: initialHeight)
+				Group {
+					if text.isEmpty {
+						RoundButtonView(systemImageName: "microphone", colors: []) {
+						}
+						.foregroundStyle(.black)
+						.frame(width: initialHeight)
 
-					RoundButtonView(systemImageName: "camera", colors: []) {
+						RoundButtonView(systemImageName: "camera", colors: []) {
+						}
+						.foregroundStyle(.black)
+						.frame(width: initialHeight)
+					} else {
+						RoundButtonView(systemImageName: "paperplane", colors: [.green]) {
+						}
+						.foregroundStyle(.white)
+						.frame(width: initialHeight)
 					}
-					.foregroundStyle(.black)
-					.frame(width: initialHeight)
-				} else {
-					RoundButtonView(systemImageName: "paperplane", colors: [.green]) {
-					}
-					.foregroundStyle(.white)
-					.frame(width: initialHeight)
 				}
-			}
-			
-			
+			}.animation(.default, value: text)
         }
         .padding()
         .background(Color(.systemGroupedBackground))
