@@ -36,13 +36,16 @@ struct CapsulesSummary: View {
 				.padding(.horizontal)
 				.frame(maxWidth: .infinity)
 
-				if !capsulesData.isEmpty {
-					FloatingButtonView {
+//				if !capsulesData.isEmpty {
+					RoundButtonView {
 						let route: CapsuleRoute = .createCapsule
 						path.append(route)
-					}.padding(.trailing, 12)
+					}
+					.frame(width: 72, height: 72)
+					.shadow(radius: 12, y: 6)
+					.padding(.trailing, 12)
 					.padding(.bottom, 12)
-				}
+//				}
 			}
 			.onTapGesture {
 				if viewModel.isDeleteMode {

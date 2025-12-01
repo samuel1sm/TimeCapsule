@@ -17,4 +17,18 @@ extension View {
 					.stroke(borderColor)
 			)
 	}
+
+	func readSize(_ size: Binding<CGSize>) -> some View {
+		background(
+			GeometryReader { proxy in
+				Color.clear
+					.preference(key: SizePreferenceKey.self, value: proxy.size)
+			}
+		)
+		.onPreferenceChange(SizePreferenceKey.self) { newSize in
+			if size.wrappedValue != newSize {
+				size.wrappedValue = newSize
+			}
+		}
+	}
 }
