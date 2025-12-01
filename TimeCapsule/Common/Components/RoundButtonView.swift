@@ -1,10 +1,11 @@
 import SwiftUI
 
 struct RoundButtonView: View {
-	var action: () -> Void
+	
 	var systemImageName: String = "plus"
-
+	var colors: [Color] = .pinkGradient
 	var iconScale: CGFloat = 0.5
+	var action: () -> Void
 	@State private var containerSize: CGSize = .zero
 
 	var body: some View {
@@ -13,7 +14,7 @@ struct RoundButtonView: View {
 				Circle()
 					.fill(
 						LinearGradient(
-							colors: [Color.pink, Color.purple],
+							colors: colors,
 							startPoint: .topLeading,
 							endPoint: .bottomTrailing
 						)
@@ -34,11 +35,9 @@ struct RoundButtonView: View {
 
 #Preview {
 	VStack(spacing: 24) {
-		// Uses ideal size (56x56)
 		RoundButtonView { }
 
-		// Scales automatically to the parent frame (100x100)
-		RoundButtonView(action: {}, systemImageName: "pencil")
+		RoundButtonView(systemImageName: "pencil", action: {})
 	}
 	.padding()
 }
