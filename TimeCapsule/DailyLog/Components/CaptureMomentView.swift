@@ -8,10 +8,7 @@ struct CaptureMomentView: View {
 					Circle()
 						.fill(
 							LinearGradient(
-								colors: [
-									Color.purple.opacity(0.9),
-									Color.blue.opacity(0.9)
-								],
+								colors: .purpleGradient,
 								startPoint: .topLeading,
 								endPoint: .bottomTrailing
 							)
