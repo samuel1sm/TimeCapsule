@@ -4,6 +4,8 @@ import Combine
 struct DailyLogView: View {
 	@State private var now = Date()
 	@State private var closesInString: String = "--"
+	@State private var feelingText = ""
+	@FocusState private var isComposerFocused: Bool
 	private let horizontalSpacing = 16
 
 	private static let dateFormatter: DateFormatter = {
@@ -40,21 +42,30 @@ struct DailyLogView: View {
 
 					VStack {
 						CaptureMomentView()
-					}.padding(.horizontal)
+					}
+					.padding(.horizontal)
+
+					Divider()
 				}
 				.background(Color(.systemGroupedBackground))
-				.onReceive(
-					Timer.publish(every: 1, on: .main, in: .common).autoconnect()
-				) { date in
-					now = date
-					closesInString = computeClosesInString(from: date)
-				}
-				.onAppear {
-					closesInString = computeClosesInString(from: now)
-				}
 			}
 			.frame(maxWidth: .infinity)
-		}.frame(maxWidth: .infinity)
+		}
+		// Dismiss keyboard on any tap in the scroll content
+		.simultaneousGesture(TapGesture().onEnded { isComposerFocused = false })
+		.safeAreaInset(edge: .bottom) {
+			InputComposerView(text: $feelingText, isFocused: $isComposerFocused)
+				.background(.ultraThinMaterial)
+		}
+		.onReceive(
+			Timer.publish(every: 1, on: .main, in: .common).autoconnect()
+		) { date in
+			now = date
+			closesInString = computeClosesInString(from: date)
+		}
+		.onAppear {
+			closesInString = computeClosesInString(from: now)
+		}
 	}
 
 	private func computeClosesInString(from date: Date) -> String {

@@ -2,145 +2,50 @@ import SwiftUI
 
 struct InputComposerView: View {
     @Binding var text: String
+    var isFocused: FocusState<Bool>.Binding
 
     @State private var isExpanded = false
     @State private var includeLocation = false
-    @State private var moodValue: Double = 0.5        // 0 = bad, 1 = amazing
+    @State private var moodValue: Double = 0.5
+	private let initialHeight: CGFloat = 36
 
     var body: some View {
         VStack(alignment: .leading, spacing: 12) {
-
-            // Top actions
-            HStack(spacing: 12) {
-                TopPillButton(
-                    icon: "mic.fill",
-                    title: "Voice",
-                    isPrimary: false
-                ) {
-                    // trigger recording
-                }
-
-                TopPillButton(
-                    icon: "camera.fill",
-                    title: "Photo",
-                    isPrimary: false
-                ) {
-                    // trigger camera
-                }
-
-                TopPillButton(
-                    icon: "plus",
-                    title: isExpanded ? "Less" : "More",
-                    isPrimary: true,
-                    isActive: isExpanded
-                ) {
-                    withAnimation(.spring(response: 0.35, dampingFraction: 0.9)) {
-                        isExpanded.toggle()
-                    }
-                }
-            }
-
             // Text input
-            TextEditor(text: $text)
-                .padding(8)
-                .frame(minHeight: 80, maxHeight: 160, alignment: .topLeading)
-                .background(
-                    RoundedRectangle(cornerRadius: 16, style: .continuous)
-                        .fill(Color(.secondarySystemBackground))
-                )
+			HStack(alignment: .top) {
+				RoundButtonView(colors: []) {
+				}
+				.foregroundStyle(.black)
+				.frame(width: initialHeight)
 
-            // Extra content when expanded
-            if isExpanded {
-                VStack(alignment: .leading, spacing: 16) {
+				TextEditor(text: $text)
+					.focused(isFocused)
+					.scrollContentBackground(.hidden)
+					.background(.white)
+					.clipShape(RoundedRectangle(cornerRadius: initialHeight))
+					.frame(minHeight: initialHeight, maxHeight: 120)
+					.fixedSize(horizontal: false, vertical: true)
 
-                    // Add media section
-                    VStack(alignment: .leading, spacing: 8) {
-                        Text("Add Media")
-                            .font(.subheadline.weight(.semibold))
-                            .foregroundStyle(.secondary)
+				
+				if text.isEmpty {
+					RoundButtonView(systemImageName: "microphone", colors: []) {
+					}
+					.foregroundStyle(.black)
+					.frame(width: initialHeight)
 
-                        HStack(spacing: 12) {
-                            SecondaryPillButton(icon: "photo", title: "Photo") { }
-                            SecondaryPillButton(icon: "video.fill", title: "Video") { }
-                            SecondaryPillButton(icon: "photo.on.rectangle", title: "Gallery") { }
-                        }
-                    }
-
-                    // Location row
-                    HStack {
-                        HStack(spacing: 10) {
-                            Circle()
-                                .fill(Color(.systemGray6))
-                                .frame(width: 34, height: 34)
-                                .overlay(
-                                    Image(systemName: "location")
-                                        .foregroundStyle(.secondary)
-                                )
-
-                            Text("Location")
-                                .font(.body)
-                        }
-
-                        Spacer()
-
-                        Toggle("", isOn: $includeLocation)
-                            .labelsHidden()
-                    }
-                    .padding(12)
-                    .background(
-                        RoundedRectangle(cornerRadius: 16, style: .continuous)
-                            .fill(Color(.systemBackground))
-                            .shadow(color: .black.opacity(0.02), radius: 4, y: 2)
-                    )
-
-                    // Mood slider
-                    VStack(alignment: .leading, spacing: 12) {
-                        Text("Mood")
-                            .font(.subheadline.weight(.semibold))
-                            .foregroundStyle(.secondary)
-
-                        VStack(spacing: 16) {
-                            Text(moodEmoji)
-                                .font(.system(size: 36))
-
-                            // slider + track
-                            ZStack {
-                                Capsule()
-                                    .fill(
-                                        LinearGradient(
-                                            colors: [Color.black, Color(.systemGray5)],
-                                            startPoint: .leading,
-                                            endPoint: .trailing
-                                        )
-                                    )
-                                    .frame(height: 14)
-
-                                Slider(value: $moodValue)
-                                    .tint(.clear) // so we only see our custom track
-                                    .padding(.horizontal, -2)
-                            }
-
-                            HStack {
-                                Text("Not great")
-                                    .font(.footnote)
-                                    .foregroundStyle(.secondary)
-
-                                Spacer()
-
-                                Text("Amazing")
-                                    .font(.footnote)
-                                    .foregroundStyle(.secondary)
-                            }
-                        }
-                        .padding(12)
-                        .background(
-                            RoundedRectangle(cornerRadius: 16, style: .continuous)
-                                .fill(Color(.systemBackground))
-                        )
-                    }
-                }
-                .transition(.move(edge: .top).combined(with: .opacity))
-            }
+					RoundButtonView(systemImageName: "camera", colors: []) {
+					}
+					.foregroundStyle(.black)
+					.frame(width: initialHeight)
+				} else {
+					RoundButtonView(systemImageName: "paperplane", colors: [.green]) {
+					}
+					.foregroundStyle(.white)
+					.frame(width: initialHeight)
+				}
+			}
+			
+			
         }
         .padding()
         .background(Color(.systemGroupedBackground))
@@ -229,8 +134,15 @@ struct SecondaryPillButton: View {
 // MARK: - Preview
 
 struct InputComposerView_Previews: PreviewProvider {
+    struct Host: View {
+        @State private var text = "teste"
+        @FocusState private var focused: Bool
+        var body: some View {
+            InputComposerView(text: $text, isFocused: $focused)
+        }
+    }
+
     static var previews: some View {
-        InputComposerView(text: .constant("teste"))
-            .previewLayout(.sizeThatFits)
+        Host()
     }
 }
