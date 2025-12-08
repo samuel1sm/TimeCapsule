@@ -11,12 +11,11 @@ struct InputComposerView: View {
 
 	var body: some View {
 		VStack(alignment: .leading, spacing: 12) {
-			// Text input
+			// MARK: - Top Input Bar
 			HStack(alignment: .top) {
-				RoundButtonView(colors: []) {
-				}
-				.foregroundStyle(.black)
-				.frame(width: initialHeight)
+				RoundButtonView(colors: []) {}
+					.foregroundStyle(.black)
+					.frame(width: initialHeight)
 
 				HStack {
 					TextEditor(text: $thoughtsText)
@@ -27,37 +26,67 @@ struct InputComposerView: View {
 						.fixedSize(horizontal: false, vertical: true)
 						.overlay(alignment: .leading) {
 							if thoughtsText.isEmpty {
-								Text("Write your toughts")
+								Text("Write your thoughts")
 									.foregroundColor(Color(.placeholderText))
 									.padding(.horizontal, 4)
 							}
 						}
-				}.padding(.horizontal)
-					.background(.white)
-					.clipShape(RoundedRectangle(cornerRadius: initialHeight))
+				}
+				.padding(.horizontal)
+				.background(.white)
+				.clipShape(RoundedRectangle(cornerRadius: initialHeight))
 
 				Group {
 					if thoughtsText.isEmpty {
-						RoundButtonView(systemImageName: "microphone", colors: []) {
-						}
-						.foregroundStyle(.black)
-						.frame(width: initialHeight)
+						RoundButtonView(systemImageName: "microphone", colors: []) {}
+							.foregroundStyle(.black)
+							.frame(width: initialHeight)
 
-						RoundButtonView(systemImageName: "camera", colors: []) {
-						}
-						.foregroundStyle(.black)
-						.frame(width: initialHeight)
+						RoundButtonView(systemImageName: "camera", colors: []) {}
+							.foregroundStyle(.black)
+							.frame(width: initialHeight)
 					} else {
-						RoundButtonView(systemImageName: "paperplane", colors: [.green]) {
-						}
-						.foregroundStyle(.white)
-						.frame(width: initialHeight)
+						RoundButtonView(systemImageName: "paperplane", colors: [.green]) {}
+							.foregroundStyle(.white)
+							.frame(width: initialHeight)
 					}
 				}
-			}.animation(.default, value: thoughtsText)
+			}
+			.animation(.default, value: thoughtsText)
+			.padding(.horizontal)
+
+			// MARK: - Options Row (Refactored)
+			VStack {
+				Divider()
+				HStack {
+					ForEach(InputOption.allCases) { option in
+						InputOptionView(option: option) {
+							handleOptionSelection(option)
+						}
+					}
+				}
+				.frame(height: 80)
+				.padding(.vertical)
+				.frame(maxWidth: .infinity)
+				.tint(.white)
+			}
 		}
-		.padding()
+		.padding(.vertical)
 		.background(Color(.systemGroupedBackground))
+	}
+
+	// Helper to handle actions neatly
+	private func handleOptionSelection(_ option: InputOption) {
+		switch option {
+		case .camera:
+			print("Camera tapped")
+		case .gallery:
+			print("Gallery tapped")
+		case .documents:
+			print("Documents tapped")
+		case .location:
+			print("Location tapped")
+		}
 	}
 
 	private var moodEmoji: String {
@@ -70,18 +99,21 @@ struct InputComposerView: View {
 	}
 }
 
-// MARK: - Preview
-
 struct InputComposerView_Previews: PreviewProvider {
-    struct Host: View {
-        @State private var text = ""
-        @FocusState private var focused: Bool
-        var body: some View {
-            InputComposerView(thoughtsText: $text, isFocused: $focused)
-        }
-    }
+	struct PreviewWrapper: View {
+		@State var text = ""
+		@FocusState var focused: Bool
 
-    static var previews: some View {
-        Host()
-    }
+		var body: some View {
+			ZStack(alignment: .bottom) {
+				Color.white.ignoresSafeArea()
+
+				InputComposerView(thoughtsText: $text, isFocused: $focused)
+			}
+		}
+	}
+
+	static var previews: some View {
+		PreviewWrapper()
+	}
 }

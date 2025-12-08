@@ -1,6 +1,7 @@
 import SwiftUI
 
 enum LogEntryOptions {
+
     case note(text: String)
     case photos(count: Int, thumbnails: [Image])
     case voiceNote(recordings: Int)
