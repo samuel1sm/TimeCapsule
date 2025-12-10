@@ -37,7 +37,7 @@ struct InputContainerView: View {
 				.background(.white)
 				.clipShape(RoundedRectangle(cornerRadius: initialHeight))
 
-				Group {
+				HStack {
 					if thoughtsText.isEmpty {
 						RoundButtonView(systemImageName: "microphone", colors: []) {}
 							.foregroundStyle(.black)
@@ -51,9 +51,8 @@ struct InputContainerView: View {
 							.foregroundStyle(.white)
 							.frame(width: initialHeight)
 					}
-				}
+				}.animation(.default, value: thoughtsText)
 			}
-			.animation(.default, value: thoughtsText)
 			.padding(.horizontal)
 
 			// MARK: - Options Row (Refactored)
