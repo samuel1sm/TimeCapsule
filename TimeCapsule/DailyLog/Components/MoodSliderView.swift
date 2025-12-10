@@ -3,23 +3,8 @@ import SwiftUI
 struct MoodSliderView: View {
     // State variable to hold the slider's value, ranging from 0.0 to 1.0.
     @State private var sliderValue: Double = 0.5
-    
-    // Computed property to determine the emoji based on the slider value.
-    var currentEmoji: String {
-        switch sliderValue {
-        case 0..<0.2:
-            return "😢"
-        case 0.2..<0.4:
-            return "😕"
-		case 0.4..<0.6:
-            return "😐"
-		case 0.6..<0.8:
-			return "😄"
-        default:
-            return "🤩"
-        }
-    }
-    
+    @Binding var currentMood: MoodOptions?
+
     var body: some View {
         VStack(spacing: 20) {
             // Header with question and current emoji
@@ -28,8 +13,9 @@ struct MoodSliderView: View {
                     .font(.headline)
                     .foregroundColor(Color(red: 0.2, green: 0.2, blue: 0.3)) // Dark gray color
                 Spacer()
-                Text(currentEmoji)
-                    .font(.title)
+				if let emoji = currentMood?.emoji {
+					Text(emoji)
+				}
             }
             
             // Custom Slider
@@ -64,10 +50,12 @@ struct MoodSliderView: View {
                         )
                 }
             }
-            .frame(height: 28) // Height of the slider component
-            
-            // Bottom labels
-            HStack {
+            .frame(height: 28)
+			.onChange(of: sliderValue) { _, newValue in
+				currentMood = MoodOptions.getOption(by: newValue)
+			}
+
+			HStack {
                 Text("😢 Not great")
                     .font(.subheadline)
                     .foregroundColor(.gray)
@@ -78,14 +66,23 @@ struct MoodSliderView: View {
             }
         }
         .padding(24) // Inner padding for content
-        .background(Color(red: 1.0, green: 0.98, blue: 0.9)) // Light yellow background
         .cornerRadius(20) // Rounded corners for the container
     }
 }
 
-// Preview provider to show the view in Xcode's canvas
 struct MoodSliderView_Previews: PreviewProvider {
-    static var previews: some View {
-        MoodSliderView()
-    }
+	struct WithBindingPreview: View {
+		@State var mood: MoodOptions? = .normal
+		var body: some View {
+			MoodSliderView(currentMood: $mood)
+				.padding()
+		}
+	}
+
+	static var previews: some View {
+		Group {
+			WithBindingPreview()
+		}
+		.previewLayout(.sizeThatFits)
+	}
 }

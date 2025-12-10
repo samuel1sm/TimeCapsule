@@ -9,6 +9,8 @@ struct InputContainerView: View {
 	@State private var includeLocation = false
 	@State private var moodValue: Double = 0.5
 	private let initialHeight: CGFloat = 36
+	@State private var isMoodSelected = false
+	@State private var currentMood: MoodOptions?
 
 	var body: some View {
 		VStack(alignment: .leading, spacing: 12) {
@@ -32,8 +34,34 @@ struct InputContainerView: View {
 									.padding(.horizontal, 4)
 							}
 						}
+
+					VStack {
+						if let emoji = currentMood?.emoji {
+							Text(emoji)
+						} else {
+							Circle()
+								.stroke(
+									Color.yellow,
+									style: StrokeStyle(
+										lineWidth: 2,
+										dash: [6, 4]
+									)
+								)
+								.frame(width: 20, height: 20)
+						}
+					}
+					.frame(width: 24, height: 24)
+					.contentShape(Rectangle())
+					.onTapGesture { isMoodSelected.toggle() }
+					.onLongPressGesture(minimumDuration: 0.5) {
+						isMoodSelected = false
+						currentMood = nil
+					}
+					.animation(.default, value: currentMood)
+					.transaction { transaction in transaction.animation = nil }
 				}
-				.padding(.horizontal)
+				.padding(.leading, 4)
+				.padding(.trailing, 6)
 				.background(.white)
 				.clipShape(RoundedRectangle(cornerRadius: initialHeight))
 
@@ -58,17 +86,21 @@ struct InputContainerView: View {
 			// MARK: - Options Row (Refactored)
 			VStack {
 				Divider()
-				HStack {
-					ForEach(InputOption.allCases) { option in
-						InputOptionView(option: option) {
-							handleOptionSelection(option)
+				if isMoodSelected {
+					MoodSliderView(currentMood: $currentMood)
+				} else {
+					HStack {
+						ForEach(InputOption.allCases) { option in
+							InputOptionView(option: option) {
+								handleOptionSelection(option)
+							}
 						}
 					}
+					.frame(height: 80)
+					.padding(.vertical)
+					.frame(maxWidth: .infinity)
+					.tint(.white)
 				}
-				.frame(height: 80)
-				.padding(.vertical)
-				.frame(maxWidth: .infinity)
-				.tint(.white)
 			}
 		}
 		.padding(.vertical)
