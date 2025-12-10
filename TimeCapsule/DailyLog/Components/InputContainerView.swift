@@ -1,6 +1,7 @@
 import SwiftUI
 
-struct InputComposerView: View {
+struct InputContainerView: View {
+
 	@Binding var thoughtsText: String
 	var isFocused: FocusState<Bool>.Binding
 
@@ -88,15 +89,6 @@ struct InputComposerView: View {
 			print("Location tapped")
 		}
 	}
-
-	private var moodEmoji: String {
-		switch moodValue {
-		case ..<0.25:  return "☹️"
-		case ..<0.5:   return "😕"
-		case ..<0.75:  return "🙂"
-		default:       return "😄"
-		}
-	}
 }
 
 struct InputComposerView_Previews: PreviewProvider {
@@ -108,7 +100,7 @@ struct InputComposerView_Previews: PreviewProvider {
 			ZStack(alignment: .bottom) {
 				Color.white.ignoresSafeArea()
 
-				InputComposerView(thoughtsText: $text, isFocused: $focused)
+				InputContainerView(thoughtsText: $text, isFocused: $focused)
 			}
 		}
 	}

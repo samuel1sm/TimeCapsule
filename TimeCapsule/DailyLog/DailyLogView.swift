@@ -54,7 +54,7 @@ struct DailyLogView: View {
 		// Dismiss keyboard on any tap in the scroll content
 		.simultaneousGesture(TapGesture().onEnded { isComposerFocused = false })
 		.safeAreaInset(edge: .bottom) {
-			InputComposerView(thoughtsText: $feelingText, isFocused: $isComposerFocused)
+			InputContainerView(thoughtsText: $feelingText, isFocused: $isComposerFocused)
 				.background(.ultraThinMaterial)
 		}
 		.onReceive(

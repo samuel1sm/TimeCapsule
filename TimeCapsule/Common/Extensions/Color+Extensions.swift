@@ -26,4 +26,9 @@ extension Array where Element == Color {
 		Color(red: 0.35, green: 0.90, blue: 0.60), // Mint Green
 		Color(red: 0.25, green: 0.85, blue: 0.75)  // Teal Green
 	]
+
+	static let brightYellow = [
+		Color(red: 1.00, green: 0.90, blue: 0.30), // Sunshine Yellow
+		Color(red: 1.00, green: 0.70, blue: 0.10)  // Deep Gold
+	]
 }

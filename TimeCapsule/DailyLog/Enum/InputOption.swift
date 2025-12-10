@@ -6,7 +6,7 @@ enum InputOption: String, CaseIterable, Identifiable {
     case gallery
     case documents
     case location
-
+	
     var id: String { rawValue }
 
     var title: String {
