@@ -50,7 +50,6 @@ struct MoodSliderView: View {
                         )
                 }
             }
-            .frame(height: 28)
 			.onChange(of: sliderValue) { _, newValue in
 				currentMood = MoodOptions.getOption(by: newValue)
 			}
@@ -65,8 +64,6 @@ struct MoodSliderView: View {
                     .foregroundColor(.gray)
             }
         }
-        .padding(24) // Inner padding for content
-        .cornerRadius(20) // Rounded corners for the container
     }
 }
 

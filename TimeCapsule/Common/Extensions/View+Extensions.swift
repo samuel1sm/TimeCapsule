@@ -26,6 +26,9 @@ extension View {
 			}
 		)
 		.onPreferenceChange(SizePreferenceKey.self) { newSize in
+			// SwiftUI sends .zero when the measured view disappears.
+			// Keep the last meaningful size.
+			guard newSize.width > 0, newSize.height > 0 else { return }
 			if size.wrappedValue != newSize {
 				size.wrappedValue = newSize
 			}

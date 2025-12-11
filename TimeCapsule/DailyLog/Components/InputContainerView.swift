@@ -83,25 +83,25 @@ struct InputContainerView: View {
 			}
 			.padding(.horizontal)
 
-			// MARK: - Options Row (Refactored)
+			Divider()
 			VStack {
-				Divider()
 				if isMoodSelected {
 					MoodSliderView(currentMood: $currentMood)
 				} else {
-					HStack {
+					HStack(spacing: 16) {
 						ForEach(InputOption.allCases) { option in
 							InputOptionView(option: option) {
 								handleOptionSelection(option)
 							}
 						}
 					}
-					.frame(height: 80)
-					.padding(.vertical)
 					.frame(maxWidth: .infinity)
 					.tint(.white)
 				}
 			}
+			.padding()
+			.frame(height: 140)
+
 		}
 		.padding(.vertical)
 		.background(Color(.systemGroupedBackground))
