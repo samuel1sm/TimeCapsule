@@ -5,7 +5,7 @@ struct InputContainerView: View {
 	@Binding var thoughtsText: String
 	var isFocused: FocusState<Bool>.Binding
 
-	@State private var isExpanded = false
+	@State private var isSendOptionsExpanded = false
 	@State private var includeLocation = false
 	@State private var moodValue: Double = 0.5
 	private let initialHeight: CGFloat = 36
@@ -14,11 +14,17 @@ struct InputContainerView: View {
 
 	var body: some View {
 		VStack(alignment: .leading, spacing: 12) {
-			// MARK: - Top Input Bar
-			HStack(alignment: .top) {
-				RoundButtonView(colors: []) {}
-					.foregroundStyle(.black)
-					.frame(width: initialHeight)
+			HStack(alignment: .center) {
+				Button {
+					isSendOptionsExpanded.toggle()
+					isMoodSelected = false
+				} label : {
+					Image(systemName: "plus")
+						.resizable()
+						.frame(width: 16, height: 16)
+						.transaction { transaction in transaction.animation = nil }
+						.foregroundStyle(.black)
+				}
 
 				HStack {
 					TextEditor(text: $thoughtsText)
@@ -52,9 +58,13 @@ struct InputContainerView: View {
 					}
 					.frame(width: 24, height: 24)
 					.contentShape(Rectangle())
-					.onTapGesture { isMoodSelected.toggle() }
+					.onTapGesture {
+						isMoodSelected.toggle()
+						isSendOptionsExpanded = false
+					}
 					.onLongPressGesture(minimumDuration: 0.5) {
 						isMoodSelected = false
+						isSendOptionsExpanded = false
 						currentMood = nil
 					}
 					.animation(.default, value: currentMood)
@@ -65,29 +75,45 @@ struct InputContainerView: View {
 				.background(.white)
 				.clipShape(RoundedRectangle(cornerRadius: initialHeight))
 
-				HStack {
+				HStack(spacing: 16) {
 					if thoughtsText.isEmpty {
-						RoundButtonView(systemImageName: "microphone", colors: []) {}
-							.foregroundStyle(.black)
-							.frame(width: initialHeight)
+						Button {
+						} label : {
+							Image(systemName: "microphone")
+								.resizable()
+								.scaledToFit()
+								.frame(width: 20, height: 20)
+								.padding(.leading, 4)
+						}
 
-						RoundButtonView(systemImageName: "camera", colors: []) {}
-							.foregroundStyle(.black)
-							.frame(width: initialHeight)
+						Button {
+						} label : {
+							Image(systemName: "camera")
+								.resizable()
+								.scaledToFit()
+								.frame(width: 20, height: 20)
+						}
 					} else {
 						RoundButtonView(systemImageName: "paperplane", colors: [.green]) {}
 							.foregroundStyle(.white)
 							.frame(width: initialHeight)
 					}
-				}.animation(.default, value: thoughtsText)
+				}
+				.foregroundStyle(.black)
+				.animation(.default, value: thoughtsText)
 			}
 			.padding(.horizontal)
 
-			Divider()
+			if isSendOptionsExpanded || isMoodSelected {
+				Divider()
+			}
+
 			VStack {
 				if isMoodSelected {
 					MoodSliderView(currentMood: $currentMood)
-				} else {
+				}
+
+				if isSendOptionsExpanded {
 					HStack(spacing: 16) {
 						ForEach(InputOption.allCases) { option in
 							InputOptionView(option: option) {
@@ -95,12 +121,13 @@ struct InputContainerView: View {
 							}
 						}
 					}
+					.padding(.vertical, 6)
 					.frame(maxWidth: .infinity)
 					.tint(.white)
 				}
 			}
 			.padding()
-			.frame(height: 140)
+			.frame(height: isSendOptionsExpanded || isMoodSelected ? 140 : 0)
 
 		}
 		.padding(.vertical)
