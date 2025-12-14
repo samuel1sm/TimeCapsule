@@ -27,7 +27,6 @@ struct RoundButtonView: View {
 						.font(.system(size: max(1, d * iconScale), weight: .semibold))
 						.symbolRenderingMode(.monochrome)
 				}
-				.aspectRatio(1, contentMode: .fit)
 				.readSize($containerSize)
 
 				if let text {
@@ -38,8 +37,6 @@ struct RoundButtonView: View {
 				}
 			}
 		}
-		.frame(idealWidth: 56, idealHeight: 56)
-		.contentShape(Circle())
 	}
 }
 

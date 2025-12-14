@@ -114,18 +114,18 @@ struct InputContainerView: View {
 				}
 
 				if isSendOptionsExpanded {
-					HStack(spacing: 16) {
+					HStack(alignment: .top, spacing: 20) {
 						ForEach(InputOption.allCases) { option in
 							RoundButtonView(
 								systemImageName: option.systemImageName,
 								colors: option.gradientColors,
-								iconScale: 0.4,
 								text: option.title
 							) {
 								handleOptionSelection(option)
 							}
 						}
 					}
+					.frame(maxHeight: 90)
 					.frame(maxWidth: .infinity)
 					.tint(.white)
 				}
