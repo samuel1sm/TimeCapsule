@@ -121,7 +121,6 @@ struct InputContainerView: View {
 							}
 						}
 					}
-					.padding(.vertical, 6)
 					.frame(maxWidth: .infinity)
 					.tint(.white)
 				}
@@ -132,6 +131,18 @@ struct InputContainerView: View {
 		}
 		.padding(.vertical)
 		.background(Color(.systemGroupedBackground))
+		.onChange(of: isMoodSelected || isSendOptionsExpanded) { _, newValue in
+			if newValue {
+				isFocused.wrappedValue = false
+			}
+		}
+		.onChange(of: isFocused.wrappedValue) { _, newValue in
+			if newValue {
+				isSendOptionsExpanded = false
+				isMoodSelected = false
+			}
+		}
+
 	}
 
 	// Helper to handle actions neatly
