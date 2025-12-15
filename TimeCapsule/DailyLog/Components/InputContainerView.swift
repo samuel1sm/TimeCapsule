@@ -123,7 +123,7 @@ struct InputContainerView: View {
 				} else {
 					RoundButtonView(systemImageName: "paperplane", colors: [.green]) {
 						action(.init(
-								entryType: .note,
+								entryType: currentMood == nil ? .note : .mood,
 								noteModel: .init(note: thoughtsText, mood: currentMood)
 						))
 						thoughtsText = ""

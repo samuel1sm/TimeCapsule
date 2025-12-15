@@ -6,6 +6,7 @@ struct DailyLogView: View {
 	@State private var closesInString: String = "--"
 	@State private var feelingText = ""
 	@FocusState private var isComposerFocused: Bool
+	@State private var entries: [EntryModel] = []
 	private let horizontalSpacing = 16
 
 	private static let dateFormatter: DateFormatter = {
@@ -28,29 +29,31 @@ struct DailyLogView: View {
 	}
 
 	var body: some View {
-		ScrollView {
-			VStack(alignment: .leading, spacing: 24) {
+			VStack(alignment: .leading, spacing: 0) {
 				DailyLogHeaderView(
 					todayString: todayString,
 					closesTimeText: $closesInString
 				)
 				.padding(.horizontal)
 				.padding(.top)
+				.padding(.bottom, 24)
+				Divider()
 
-				VStack(spacing: 24) {
-					Divider()
-
-					VStack {
-						CaptureMomentView()
+				if entries.isEmpty {
+					VStack(spacing: 24) {
+							CaptureMomentView()
+						.padding(.horizontal)
+						Divider()
 					}
-					.padding(.horizontal)
-
-					Divider()
+					.padding(.top, 24)
+					.background(Color(.systemGroupedBackground))
 				}
-				.background(Color(.systemGroupedBackground))
+
+				List(entries) { item in
+					LogEntryCardView(entry: item).listRowSeparator(.hidden)
+				}.listStyle(.plain)
 			}
 			.frame(maxWidth: .infinity)
-		}
 		.simultaneousGesture(TapGesture().onEnded { isComposerFocused = false })
 		.safeAreaInset(edge: .bottom) {
 			InputContainerView(
@@ -82,8 +85,8 @@ struct DailyLogView: View {
 		return Self.timeFormatter.string(from: interval) ?? "--"
 	}
 
-	private func newEntryWasClicked(_ option : EntryModel) {
-
+	private func newEntryWasClicked(_ entrie : EntryModel) {
+		entries.append(entrie)
 	}
 }
 
