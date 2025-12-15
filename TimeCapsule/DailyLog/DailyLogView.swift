@@ -82,7 +82,7 @@ struct DailyLogView: View {
 		return Self.timeFormatter.string(from: interval) ?? "--"
 	}
 
-	private func newEntryWasClicked(_ option : LogEntryOptions) {
+	private func newEntryWasClicked(_ option : EntryModel) {
 
 	}
 }

@@ -10,7 +10,7 @@ struct InputContainerView: View {
 	@State private var moodValue: Double = 0.5
 	@State private var isMoodSelected = false
 	@State private var currentMood: MoodOptions?
-	var action: (LogEntryOptions) -> Void
+	var action: (EntryModel) -> Void
 
 	var body: some View {
 		VStack(alignment: .leading, spacing: 12) {
@@ -122,7 +122,10 @@ struct InputContainerView: View {
 					}
 				} else {
 					RoundButtonView(systemImageName: "paperplane", colors: [.green]) {
-						action(.note(text: thoughtsText, mood: currentMood))
+						action(.init(
+								entryType: .note,
+								noteModel: .init(note: thoughtsText, mood: currentMood)
+						))
 						thoughtsText = ""
 						currentMood = nil
 					}.foregroundStyle(.white)

@@ -15,6 +15,16 @@ enum MoodOptions {
 		case .overjoy: "🤩"
 		}
 	}
+
+	var text: String {
+		switch self {
+		case .crying: "crying"
+		case .sad: "sad"
+		case .normal: "tranquil"
+		case .happy: "happy"
+		case .overjoy: "overjoy"
+		}
+	}
 }
 
 extension MoodOptions {
