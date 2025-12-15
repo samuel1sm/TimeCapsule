@@ -1,6 +1,7 @@
 import SwiftUI
 
 struct LogEntryCardView: View {
+
 	let entry: LogEntryOptions
 
     var body: some View {
@@ -37,7 +38,7 @@ struct LogEntryCardView: View {
     @ViewBuilder
     private var entryContent: some View {
         switch entry {
-        case let .note(text):
+        case let .note(text, mood):
             Text(text)
                 .font(.body)
 
@@ -47,10 +48,6 @@ struct LogEntryCardView: View {
         case let .voiceNote(recordings):
             Text("\(recordings) recording\(recordings > 1 ? "s" : "")")
                 .font(.body)
-
-        case let .mood(description, _):
-            Text(description)
-                .font(.body)
 		default:
 			Text("tedst")
         }
@@ -58,7 +55,7 @@ struct LogEntryCardView: View {
 }
 
 #Preview {
-	LogEntryCardView(entry: .note(text: "teste"))
+	LogEntryCardView(entry: .note(text: "teste", mood: .overjoy))
 		.frame(minHeight: 100)
 		.padding(.horizontal)
 }

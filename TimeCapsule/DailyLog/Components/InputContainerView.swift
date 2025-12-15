@@ -1,16 +1,16 @@
 import SwiftUI
 
 struct InputContainerView: View {
+	private let initialHeight: CGFloat = 36
 
 	@Binding var thoughtsText: String
 	var isFocused: FocusState<Bool>.Binding
-
 	@State private var isSendOptionsExpanded = false
 	@State private var includeLocation = false
 	@State private var moodValue: Double = 0.5
-	private let initialHeight: CGFloat = 36
 	@State private var isMoodSelected = false
 	@State private var currentMood: MoodOptions?
+	var action: (LogEntryOptions) -> Void
 
 	var body: some View {
 		VStack(alignment: .leading, spacing: 12) {
@@ -121,9 +121,12 @@ struct InputContainerView: View {
 							.frame(width: 20, height: 20)
 					}
 				} else {
-					RoundButtonView(systemImageName: "paperplane", colors: [.green]) {}
-						.foregroundStyle(.white)
-						.frame(width: initialHeight)
+					RoundButtonView(systemImageName: "paperplane", colors: [.green]) {
+						action(.note(text: thoughtsText, mood: currentMood))
+						thoughtsText = ""
+						currentMood = nil
+					}.foregroundStyle(.white)
+					.frame(width: initialHeight)
 				}
 			}
 			.foregroundStyle(.black)
@@ -181,7 +184,7 @@ struct InputComposerView_Previews: PreviewProvider {
 			ZStack(alignment: .bottom) {
 				Color.white.ignoresSafeArea()
 
-				InputContainerView(thoughtsText: $text, isFocused: $focused)
+				InputContainerView(thoughtsText: $text, isFocused: $focused, action: {_ in })
 			}
 		}
 	}

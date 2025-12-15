@@ -51,11 +51,13 @@ struct DailyLogView: View {
 			}
 			.frame(maxWidth: .infinity)
 		}
-		// Dismiss keyboard on any tap in the scroll content
 		.simultaneousGesture(TapGesture().onEnded { isComposerFocused = false })
 		.safeAreaInset(edge: .bottom) {
-			InputContainerView(thoughtsText: $feelingText, isFocused: $isComposerFocused)
-				.background(.ultraThinMaterial)
+			InputContainerView(
+				thoughtsText: $feelingText,
+				isFocused: $isComposerFocused,
+				action: newEntryWasClicked
+			).background(.ultraThinMaterial)
 		}
 		.onReceive(
 			Timer.publish(every: 1, on: .main, in: .common).autoconnect()
@@ -78,6 +80,10 @@ struct DailyLogView: View {
 
 		let interval = max(0, midnight.timeIntervalSince(date))
 		return Self.timeFormatter.string(from: interval) ?? "--"
+	}
+
+	private func newEntryWasClicked(_ option : LogEntryOptions) {
+
 	}
 }
 
