@@ -3,7 +3,7 @@ import SwiftUI
 enum LogEntryOptions {
 
     case note
-    case photos
+    case midia
     case voiceNote
     case mood
 }

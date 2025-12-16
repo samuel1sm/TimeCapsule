@@ -5,7 +5,7 @@ extension EntryModel {
 	func getBaseColor() -> Color {
 		switch entryType {
 				case .note: .blue
-				case .photos: .purple
+				case .midia: .purple
 				case .voiceNote: .red
 				case .mood: .yellow
 		}
@@ -14,7 +14,7 @@ extension EntryModel {
 	func getIcon() -> String {
 		switch entryType {
 			case .note: "doc.text"
-			case .photos: "photo.on.rectangle"
+			case .midia: "photo.on.rectangle"
 			case .voiceNote: "mic.fill"
 			case .mood: noteModel?.mood?.emoji ?? "😐"
 		}
@@ -23,7 +23,7 @@ extension EntryModel {
 	func getTitle() -> String {
 		switch entryType {
 		case .note: "Note"
-		case .photos: "Images"
+		case .midia: "Midia"
 		case .voiceNote: "Voice note"
 		case .mood: noteModel?.mood?.text ?? "normal"
 		}
