@@ -146,7 +146,7 @@ struct InputContainerView: View {
 			}
 
 			if isSendOptionsExpanded {
-				HStack(alignment: .top, spacing: 20) {
+				HStack(alignment: .top, spacing: 24) {
 					ForEach(InputOption.allCases) { option in
 						RoundButtonView(
 							systemImageName: option.systemImageName,
