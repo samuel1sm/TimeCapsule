@@ -59,7 +59,7 @@ struct DailyLogView: View {
 			InputContainerView(
 				thoughtsText: $feelingText,
 				isFocused: $isComposerFocused,
-				action: newEntryWasClicked
+				sendNote: newEntryWasClicked
 			).background(.ultraThinMaterial)
 		}
 		.onReceive(

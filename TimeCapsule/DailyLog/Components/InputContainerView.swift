@@ -6,11 +6,10 @@ struct InputContainerView: View {
 	@Binding var thoughtsText: String
 	var isFocused: FocusState<Bool>.Binding
 	@State private var isSendOptionsExpanded = false
-	@State private var includeLocation = false
 	@State private var moodValue: Double = 0.5
 	@State private var isMoodSelected = false
 	@State private var currentMood: MoodOptions?
-	var action: (EntryModel) -> Void
+	var sendNote: (EntryModel) -> Void
 
 	var body: some View {
 		VStack(alignment: .leading, spacing: 12) {
@@ -122,7 +121,7 @@ struct InputContainerView: View {
 					}
 				} else {
 					RoundButtonView(systemImageName: "paperplane", colors: [.green]) {
-						action(.init(
+						sendNote(.init(
 								entryType: currentMood == nil ? .note : .mood,
 								noteModel: .init(note: thoughtsText, mood: currentMood)
 						))
@@ -135,7 +134,6 @@ struct InputContainerView: View {
 			.foregroundStyle(.black)
 			.animation(.default, value: thoughtsText)
 		}
-
 	}
 
 	@ViewBuilder
@@ -187,7 +185,7 @@ struct InputComposerView_Previews: PreviewProvider {
 			ZStack(alignment: .bottom) {
 				Color.white.ignoresSafeArea()
 
-				InputContainerView(thoughtsText: $text, isFocused: $focused, action: {_ in })
+				InputContainerView(thoughtsText: $text, isFocused: $focused, sendNote: {_ in })
 			}
 		}
 	}
