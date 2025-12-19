@@ -10,6 +10,7 @@ struct InputContainerView: View {
 	@State private var isMoodSelected = false
 	@State private var currentMood: MoodOptions?
 	var sendNote: (EntryModel) -> Void
+	@State private var showCamera = false
 
 	var body: some View {
 		VStack(alignment: .leading, spacing: 12) {
@@ -113,6 +114,7 @@ struct InputContainerView: View {
 							.padding(.leading, 4)
 					}
 					Button {
+						showCamera = true
 					} label : {
 						Image(systemName: "camera")
 							.resizable()
@@ -133,6 +135,8 @@ struct InputContainerView: View {
 			}
 			.foregroundStyle(.black)
 			.animation(.default, value: thoughtsText)
+		}.sheet(isPresented: $showCamera) {
+			CameraView()
 		}
 	}
 
