@@ -194,6 +194,69 @@ final class CameraService: NSObject, ObservableObject {
 			}
 		}
 	}
+
+	func switchCamera() {
+		// Find current video input
+		guard let currentInput = session.inputs.compactMap({ $0 as? AVCaptureDeviceInput }).first(where: { $0.device.hasMediaType(.video) }) else {
+			errorMessage = "No current video input."
+			return
+		}
+
+		let currentPosition = currentInput.device.position
+		let desiredPosition: AVCaptureDevice.Position = (currentPosition == .back) ? .front : .back
+
+		// Find a suitable device for the desired position
+		let discovery = AVCaptureDevice.DiscoverySession(
+			deviceTypes: [
+				.builtInTripleCamera,
+				.builtInDualCamera,
+				.builtInDualWideCamera,
+				.builtInUltraWideCamera,
+				.builtInWideAngleCamera,
+				.builtInTrueDepthCamera
+			],
+			mediaType: .video,
+			position: desiredPosition
+		)
+
+		let chosenDevice = discovery.devices.first
+		?? AVCaptureDevice.default(.builtInWideAngleCamera, for: .video, position: desiredPosition)
+
+		guard let newDevice = chosenDevice else {
+			errorMessage = "Desired camera not available."
+			return
+		}
+
+		do {
+			let newInput = try AVCaptureDeviceInput(device: newDevice)
+
+			session.beginConfiguration()
+
+			// Remove current video input
+			session.removeInput(currentInput)
+
+			// Add new input or roll back
+			if session.canAddInput(newInput) {
+				session.addInput(newInput)
+				videoDevice = newDevice
+			} else {
+				// Roll back to previous input
+				if session.canAddInput(currentInput) {
+					session.addInput(currentInput)
+				}
+				session.commitConfiguration()
+				errorMessage = "Failed to add new camera input."
+				return
+			}
+
+			session.commitConfiguration()
+
+			// Rebuild rotation coordinator for the new device
+			setupRotationCoordinatorIfPossible()
+		} catch {
+			errorMessage = error.localizedDescription
+		}
+	}
 }
 
 // MARK: - Photo delegate

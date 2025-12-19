@@ -16,28 +16,48 @@ struct CameraView: View {
 			VStack {
 				Spacer()
 
-				HStack(spacing: 20) {
-					Button {
-						model.takePhoto()
-						showPreview = true
-					} label: {
-						Text("Photo")
-							.padding(.horizontal, 20).padding(.vertical, 12)
-							.background(.black.opacity(0.6))
-							.foregroundStyle(.white)
-							.clipShape(Capsule())
+				HStack {
+					// Existing capture controls centered-ish
+					Spacer()
+
+					HStack(spacing: 20) {
+						Button {
+							model.takePhoto()
+							showPreview = true
+						} label: {
+							Text("Photo")
+								.padding(.horizontal, 20).padding(.vertical, 12)
+								.background(.black.opacity(0.6))
+								.foregroundStyle(.white)
+								.clipShape(Capsule())
+						}
+
+						Button {
+							model.toggleRecording()
+						} label: {
+							Text(model.isRecording ? "Stop" : "Record")
+								.padding(.horizontal, 20).padding(.vertical, 12)
+								.background(model.isRecording ? .red.opacity(0.7) : .black.opacity(0.6))
+								.foregroundStyle(.white)
+								.clipShape(Capsule())
+						}
 					}
 
+					Spacer()
+
+					// Bottom-right camera switch button
 					Button {
-						model.toggleRecording()
+						model.switchCamera()
 					} label: {
-						Text(model.isRecording ? "Stop" : "Record")
-							.padding(.horizontal, 20).padding(.vertical, 12)
-							.background(model.isRecording ? .red.opacity(0.7) : .black.opacity(0.6))
+						Image(systemName: "arrow.triangle.2.circlepath.camera")
+							.font(.system(size: 18, weight: .semibold))
+							.padding(12)
+							.background(.black.opacity(0.6))
 							.foregroundStyle(.white)
-							.clipShape(Capsule())
+							.clipShape(Circle())
 					}
 				}
+				.padding(.horizontal, 16)
 				.padding(.bottom, 40)
 			}
 		}
