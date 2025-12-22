@@ -403,13 +403,14 @@ extension CameraService: AVCaptureFileOutputRecordingDelegate {
 			var videoTransform: CGAffineTransform = .identity
 
 			for url in segments {
-				let asset = AVAsset(url: url)
+				let asset = AVURLAsset(url: url)
 
-				if let srcVideoTrack = asset.tracks(withMediaType: .video).first {
-					videoTransform = srcVideoTrack.preferredTransform
+				if let srcVideoTrack = try? await asset.loadTracks(withMediaType: .video).first,
+				   let transform = try? await srcVideoTrack.load(.preferredTransform) {
+					videoTransform = transform
 					do {
-						try videoTrack.insertTimeRange(
-							CMTimeRange(start: .zero, duration: asset.duration),
+						try await videoTrack.insertTimeRange(
+							CMTimeRange(start: .zero, duration: asset.load(.duration)),
 							of: srcVideoTrack,
 							at: currentTime
 						)
@@ -419,10 +420,10 @@ extension CameraService: AVCaptureFileOutputRecordingDelegate {
 					}
 				}
 
-				if let srcAudioTrack = asset.tracks(withMediaType: .audio).first {
+				if let srcAudioTrack = try? await asset.loadTracks(withMediaType: .audio).first {
 					do {
-						try audioTrack.insertTimeRange(
-							CMTimeRange(start: .zero, duration: asset.duration),
+						try await audioTrack.insertTimeRange(
+							CMTimeRange(start: .zero, duration: asset.load(.duration)),
 							of: srcAudioTrack,
 							at: currentTime
 						)
@@ -432,7 +433,7 @@ extension CameraService: AVCaptureFileOutputRecordingDelegate {
 					}
 				}
 
-				currentTime = CMTimeAdd(currentTime, asset.duration)
+				currentTime = try await CMTimeAdd(currentTime, asset.load(.duration))
 			}
 
 			// Preserve transform for orientation
