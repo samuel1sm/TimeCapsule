@@ -58,10 +58,10 @@ final class CameraService: NSObject, ObservableObject {
 			errorMessage = "Camera/Microphone permission denied."
 			return
 		}
+		configureSession()
 
-		Task { [weak self] in
-			self?.configureSession()
-			self?.session.startRunning()
+		Task.detached { [weak self] in
+			await self?.session.startRunning()
 		}
 	}
 
@@ -443,24 +443,35 @@ extension CameraService: AVCaptureFileOutputRecordingDelegate {
 				await MainActor.run { self.errorMessage = "Failed to create exporter." }
 				return
 			}
-			exporter.outputURL = outputURL
-			exporter.outputFileType = .mov
 			exporter.shouldOptimizeForNetworkUse = true
 
-			await withCheckedContinuation { (continuation: CheckedContinuation<Void, Never>) in
-				exporter.exportAsynchronously {
-					continuation.resume()
+
+			Task { [weak self] in
+				do {
+					try await exporter.export(to: outputURL, as: .mov)
+
+					// Delete segments OFF the main thread
+					for url in segments {
+						try? FileManager.default.removeItem(at: url)
+					}
+
+					// UI/state updates ON the main thread
+					await MainActor.run { [self] in
+						self?.capturedVideoURL = outputURL
+						self?.segmentURLs.removeAll()
+					}
+				} catch {
+					await MainActor.run { [self] in
+						self?.errorMessage = error.localizedDescription
+						self?.segmentURLs.removeAll()
+					}
 				}
 			}
 
-			await MainActor.run {
-				if exporter.status == .completed {
-					self.capturedVideoURL = outputURL
-					for url in segments { try? FileManager.default.removeItem(at: url) }
-				} else {
-					self.errorMessage = exporter.error?.localizedDescription ?? "Export failed."
+			for await state in exporter.states(updateInterval: 0.5) {
+				if case .exporting(let progress) = state {
+					print("Progress: \(progress.fractionCompleted)")
 				}
-				self.segmentURLs.removeAll()
 			}
 		}
 	}
