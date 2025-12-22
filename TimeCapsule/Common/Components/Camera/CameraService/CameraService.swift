@@ -24,6 +24,15 @@ final class CameraService: NSObject, ObservableObject {
 	private var previewAngleObservation: NSKeyValueObservation?
 	private var captureAngleObservation: NSKeyValueObservation?
 
+	// Segmented recording state
+	private var segmentURLs: [URL] = []
+	private var pendingStopFinalizeAndMerge = false
+	private var activeSegmentCount = 0
+
+	// Serialized camera switch state
+	private var pendingSwitchPosition: AVCaptureDevice.Position?
+	private var isSwitchingCameras = false
+
 	// MARK: - Permissions + lifecycle
 
 	func start() {
@@ -52,10 +61,7 @@ final class CameraService: NSObject, ObservableObject {
 
 		Task { [weak self] in
 			self?.configureSession()
-
-			await MainActor.run {
-				self?.session.startRunning()
-			}
+			self?.session.startRunning()
 		}
 	}
 
@@ -95,7 +101,6 @@ final class CameraService: NSObject, ObservableObject {
 
 		session.commitConfiguration()
 
-		// Rotation coordinator after config (needs device + preview layer if available)
 		DispatchQueue.main.async { [weak self] in
 			self?.setupRotationCoordinatorIfPossible()
 		}
@@ -109,19 +114,18 @@ final class CameraService: NSObject, ObservableObject {
 	private func setupRotationCoordinatorIfPossible() {
 		guard let device = videoDevice else { return }
 
-		// Access previewLayer on the main actor when creating the coordinator
 		let currentPreviewLayer = previewLayer
 		let coordinator = AVCaptureDevice.RotationCoordinator(device: device, previewLayer: currentPreviewLayer)
 		rotationCoordinator = coordinator
 
-		// Keep preview level relative to gravity
 		previewAngleObservation = coordinator.observe(
 			\.videoRotationAngleForHorizonLevelPreview,
 			 options: [.initial, .new]
 		) { [weak self] _, change in
 			guard let angle = change.newValue else { return }
 			Task { @MainActor [weak self] in
-				guard let connection = self?.previewLayer?.connection,  connection.isVideoRotationAngleSupported(angle) else { return }
+				guard let connection = self?.previewLayer?.connection,
+					  connection.isVideoRotationAngleSupported(angle) else { return }
 				connection.videoRotationAngle = angle
 			}
 		}
@@ -155,15 +159,28 @@ final class CameraService: NSObject, ObservableObject {
 
 	func toggleRecording() {
 		if isRecording {
+			// Stop the entire session; merge after the last segment finalizes.
+			pendingStopFinalizeAndMerge = true
 			movieOutput.stopRecording()
 			return
 		}
+
+		// Start new session
+		segmentURLs.removeAll()
+		pendingStopFinalizeAndMerge = false
+		isSwitchingCameras = false
+		pendingSwitchPosition = nil
+
+		startNewSegment()
+		isRecording = true
+	}
+
+	private func startNewSegment() {
 		let url = FileManager.default.temporaryDirectory
 			.appendingPathComponent(UUID().uuidString)
 			.appendingPathExtension("mov")
-
+		activeSegmentCount += 1
 		movieOutput.startRecording(to: url, recordingDelegate: self)
-		isRecording = true
 	}
 
 	func discardCapture() {
@@ -195,6 +212,8 @@ final class CameraService: NSObject, ObservableObject {
 		}
 	}
 
+	// MARK: - Camera switching (serialized while recording)
+
 	func switchCamera() {
 		// Find current video input
 		guard let currentInput = session.inputs.compactMap({ $0 as? AVCaptureDeviceInput }).first(where: { $0.device.hasMediaType(.video) }) else {
@@ -205,7 +224,26 @@ final class CameraService: NSObject, ObservableObject {
 		let currentPosition = currentInput.device.position
 		let desiredPosition: AVCaptureDevice.Position = (currentPosition == .back) ? .front : .back
 
-		// Find a suitable device for the desired position
+		// If already switching, ignore repeated taps
+		if isSwitchingCameras {
+			return
+		}
+
+		if isRecording {
+			// Defer the actual switch until the current segment is finalized
+			isSwitchingCameras = true
+			pendingSwitchPosition = desiredPosition
+			// This will trigger didFinishRecording; don't reconfigure yet
+			movieOutput.stopRecording()
+			return
+		}
+
+		// Not recording: perform immediate switch
+		performCameraSwitch(to: desiredPosition)
+	}
+
+	private func performCameraSwitch(to position: AVCaptureDevice.Position) {
+		// Choose a device for the desired position
 		let discovery = AVCaptureDevice.DiscoverySession(
 			deviceTypes: [
 				.builtInTripleCamera,
@@ -216,14 +254,20 @@ final class CameraService: NSObject, ObservableObject {
 				.builtInTrueDepthCamera
 			],
 			mediaType: .video,
-			position: desiredPosition
+			position: position
 		)
 
 		let chosenDevice = discovery.devices.first
-		?? AVCaptureDevice.default(.builtInWideAngleCamera, for: .video, position: desiredPosition)
+			?? AVCaptureDevice.default(.builtInWideAngleCamera, for: .video, position: position)
 
 		guard let newDevice = chosenDevice else {
 			errorMessage = "Desired camera not available."
+			return
+		}
+
+		// Find current video input
+		guard let currentVideoInput = session.inputs.compactMap({ $0 as? AVCaptureDeviceInput }).first(where: { $0.device.hasMediaType(.video) }) else {
+			errorMessage = "No current video input."
 			return
 		}
 
@@ -231,18 +275,15 @@ final class CameraService: NSObject, ObservableObject {
 			let newInput = try AVCaptureDeviceInput(device: newDevice)
 
 			session.beginConfiguration()
+			session.removeInput(currentVideoInput)
 
-			// Remove current video input
-			session.removeInput(currentInput)
-
-			// Add new input or roll back
 			if session.canAddInput(newInput) {
 				session.addInput(newInput)
 				videoDevice = newDevice
 			} else {
-				// Roll back to previous input
-				if session.canAddInput(currentInput) {
-					session.addInput(currentInput)
+				// Roll back
+				if session.canAddInput(currentVideoInput) {
+					session.addInput(currentVideoInput)
 				}
 				session.commitConfiguration()
 				errorMessage = "Failed to add new camera input."
@@ -251,7 +292,6 @@ final class CameraService: NSObject, ObservableObject {
 
 			session.commitConfiguration()
 
-			// Rebuild rotation coordinator for the new device
 			setupRotationCoordinatorIfPossible()
 		} catch {
 			errorMessage = error.localizedDescription
@@ -292,13 +332,135 @@ extension CameraService: AVCaptureFileOutputRecordingDelegate {
 					from connections: [AVCaptureConnection],
 					error: Error?) {
 		DispatchQueue.main.async { [weak self] in
-			self?.isRecording = false
-			if let error {
-				self?.errorMessage = error.localizedDescription
+			guard let self else { return }
+
+			// Close this segment
+			self.activeSegmentCount = max(0, self.activeSegmentCount - 1)
+
+			// If we were switching cameras, ignore benign interruptions unless we truly failed to produce a file
+			if let error, !self.isSwitchingCameras {
+				self.errorMessage = error.localizedDescription
+			}
+
+			// Append valid segment
+			if (try? FileManager.default.attributesOfItem(atPath: outputFileURL.path)[.size] as? NSNumber)?.intValue ?? 0 > 0 {
+				self.segmentURLs.append(outputFileURL)
 			} else {
-				self?.capturedVideoURL = outputFileURL
+				try? FileManager.default.removeItem(at: outputFileURL)
+			}
+
+			// If a camera switch was pending and no active segments, perform it now and start a new segment
+			if self.isSwitchingCameras, self.activeSegmentCount == 0 {
+				let target = self.pendingSwitchPosition
+				self.isSwitchingCameras = false
+				self.pendingSwitchPosition = nil
+
+				if let target {
+					self.performCameraSwitch(to: target)
+				}
+				// Immediately start next segment to continue recording
+				self.startNewSegment()
+				self.isRecording = true
+				return
+			}
+
+			// If user requested stop of entire session and no active segments remain, merge
+			if self.pendingStopFinalizeAndMerge, self.activeSegmentCount == 0 {
+				self.isRecording = false
+				self.mergeSegmentsAndFinish()
+			}
+		}
+	}
+
+	private func mergeSegmentsAndFinish() {
+		let segments = segmentURLs
+		guard !segments.isEmpty else {
+			errorMessage = "No segments to merge."
+			return
+		}
+
+		if segments.count == 1 {
+			capturedVideoURL = segments[0]
+			segmentURLs.removeAll()
+			return
+		}
+
+		let outputURL = FileManager.default.temporaryDirectory
+			.appendingPathComponent(UUID().uuidString)
+			.appendingPathExtension("mov")
+
+		Task.detached(priority: .userInitiated) { [segments] in
+			let composition = AVMutableComposition()
+			guard
+				let videoTrack = composition.addMutableTrack(withMediaType: .video, preferredTrackID: kCMPersistentTrackID_Invalid),
+				let audioTrack = composition.addMutableTrack(withMediaType: .audio, preferredTrackID: kCMPersistentTrackID_Invalid)
+			else {
+				await MainActor.run { self.errorMessage = "Failed to create composition tracks." }
+				return
+			}
+
+			var currentTime = CMTime.zero
+			var videoTransform: CGAffineTransform = .identity
+
+			for url in segments {
+				let asset = AVAsset(url: url)
+
+				if let srcVideoTrack = asset.tracks(withMediaType: .video).first {
+					videoTransform = srcVideoTrack.preferredTransform
+					do {
+						try videoTrack.insertTimeRange(
+							CMTimeRange(start: .zero, duration: asset.duration),
+							of: srcVideoTrack,
+							at: currentTime
+						)
+					} catch {
+						await MainActor.run { self.errorMessage = "Merge failed (video): \(error.localizedDescription)" }
+						return
+					}
+				}
+
+				if let srcAudioTrack = asset.tracks(withMediaType: .audio).first {
+					do {
+						try audioTrack.insertTimeRange(
+							CMTimeRange(start: .zero, duration: asset.duration),
+							of: srcAudioTrack,
+							at: currentTime
+						)
+					} catch {
+						await MainActor.run { self.errorMessage = "Merge failed (audio): \(error.localizedDescription)" }
+						return
+					}
+				}
+
+				currentTime = CMTimeAdd(currentTime, asset.duration)
+			}
+
+			// Preserve transform for orientation
+			videoTrack.preferredTransform = videoTransform
+
+			guard let exporter = AVAssetExportSession(asset: composition, presetName: AVAssetExportPresetHighestQuality) else {
+				await MainActor.run { self.errorMessage = "Failed to create exporter." }
+				return
+			}
+			exporter.outputURL = outputURL
+			exporter.outputFileType = .mov
+			exporter.shouldOptimizeForNetworkUse = true
+
+			await withCheckedContinuation { (continuation: CheckedContinuation<Void, Never>) in
+				exporter.exportAsynchronously {
+					continuation.resume()
+				}
+			}
+
+			await MainActor.run {
+				if exporter.status == .completed {
+					self.capturedVideoURL = outputURL
+					for url in segments { try? FileManager.default.removeItem(at: url) }
+				} else {
+					self.errorMessage = exporter.error?.localizedDescription ?? "Export failed."
+				}
+				self.segmentURLs.removeAll()
 			}
 		}
 	}
 }
-
