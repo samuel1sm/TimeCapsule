@@ -153,6 +153,17 @@ final class CameraService: NSObject, ObservableObject {
 	// MARK: - Actions
 
 	func takePhoto() {
+		// If recording, cancel it first, and clear any pending merge/switch state.
+		if isRecording {
+			pendingStopFinalizeAndMerge = false
+			isSwitchingCameras = false
+			pendingSwitchPosition = nil
+			movieOutput.stopRecording()
+			isRecording = false
+			segmentURLs.removeAll()
+			activeSegmentCount = 0
+		}
+
 		let settings = AVCapturePhotoSettings()
 		photoOutput.capturePhoto(with: settings, delegate: self)
 	}
@@ -374,7 +385,7 @@ extension CameraService: AVCaptureFileOutputRecordingDelegate {
 
 	private func mergeSegmentsAndFinish() {
 		let segments = segmentURLs
-		guard !segments.isEmpty else {
+		if segments.isEmpty {
 			errorMessage = "No segments to merge."
 			return
 		}
