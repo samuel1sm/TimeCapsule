@@ -1,31 +1,54 @@
 import SwiftUI
-import AVKit
+import Combine
 
 struct CameraView: View {
 
 	@StateObject private var model = CameraService()
 	@State private var showPreview = false
 
+	// Recording timer state
+	@State private var recordingStartDate: Date?
+	@State private var elapsedSeconds: Int = 0
+	@State private var timerActive: Bool = false
+	private let timer = Timer.publish(every: 1, on: .main, in: .common).autoconnect()
+
 	var body: some View {
 		ZStack {
 			#if targetEnvironment(simulator)
-			// Simulator: show a plain white screen
 			Color.white
 				.ignoresSafeArea()
 			#else
-			// Real device: show the camera preview
 			CameraRepresentable(session: model.session) { layer in
 				model.attachPreviewLayer(layer)
 			}
 			.ignoresSafeArea()
 			#endif
 
+			// Top-center timer overlay (only while recording)
+			VStack {
+				HStack {
+					Spacer()
+					if model.isRecording {
+						Text(formattedTime(elapsedSeconds))
+							.font(.system(.headline, design: .monospaced))
+							.padding(.horizontal, 12)
+							.padding(.vertical, 6)
+							.background(.black.opacity(0.6))
+							.foregroundStyle(.white)
+							.clipShape(Capsule())
+					}
+					Spacer()
+				}
+				.padding(.top, 12)
+
+				Spacer()
+			}
+
 			VStack {
 				Spacer()
 
 				ZStack {
 					HStack {
-						// Existing capture controls centered-ish
 						Spacer()
 						
 						HStack(spacing: 20) {
@@ -52,8 +75,6 @@ struct CameraView: View {
 						}
 						
 						Spacer()
-						
-						// Bottom-right camera switch button
 					}
 
 					HStack {
@@ -83,6 +104,23 @@ struct CameraView: View {
 		}
 		.onAppear { model.start() }
 		.onDisappear { model.stop() }
+		// Drive timer start/stop based on recording state
+		.onChange(of: model.isRecording) { _, newValue in
+			if newValue {
+				recordingStartDate = Date()
+				elapsedSeconds = 0
+				timerActive = true
+			} else {
+				timerActive = false
+				recordingStartDate = nil
+				elapsedSeconds = 0
+			}
+		}
+		// Tick every second while active
+		.onReceive(timer) { _ in
+			guard timerActive, let start = recordingStartDate else { return }
+			elapsedSeconds = max(0, Int(Date().timeIntervalSince(start)))
+		}
 		.onChange(of: model.capturedPhotoURL) { _, newValue in
 			if newValue != nil { showPreview = true }
 		}
@@ -97,7 +135,12 @@ struct CameraView: View {
 		} message: {
 			Text(model.errorMessage ?? "")
 		}
+	}
 
+	private func formattedTime(_ seconds: Int) -> String {
+		let m = seconds / 60
+		let s = seconds % 60
+		return String(format: "%02d:%02d", m, s)
 	}
 }
 

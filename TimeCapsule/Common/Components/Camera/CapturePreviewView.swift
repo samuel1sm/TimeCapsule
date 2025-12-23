@@ -1,5 +1,6 @@
 import SwiftUI
 import AVFoundation
+import AVKit
 
 struct CapturePreviewView: View {
 	@ObservedObject var model: CameraService
