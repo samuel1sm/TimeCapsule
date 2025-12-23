@@ -78,34 +78,7 @@ struct CameraView: View {
 			if model.isProcessing {
 				Color.black.opacity(0.5)
 					.ignoresSafeArea()
-				VStack(spacing: 16) {
-					if model.processingProgress <= 0 {
-						// Initial phase: unknown progress -> circular spinner
-						ProgressView()
-							.progressViewStyle(.circular)
-							.tint(.white)
-						Text("Processing video...")
-							.font(.headline)
-							.foregroundStyle(.white)
-					} else {
-						// Progress known: show linear bar and percentage
-						ZStack(alignment: .leading) {
-							RoundedRectangle(cornerRadius: 8)
-								.fill(Color.white.opacity(0.2))
-								.frame(width: 240, height: 12)
-							RoundedRectangle(cornerRadius: 8)
-								.fill(Color.white)
-								.frame(width: 240 * model.processingProgress, height: 12)
-								.animation(.easeInOut(duration: 0.1), value: model.processingProgress)
-						}
-						Text("Processing video... \(Int(model.processingProgress * 100))%")
-							.font(.headline)
-							.foregroundStyle(.white)
-					}
-				}
-				.padding(24)
-				.background(Color.black.opacity(0.7))
-				.clipShape(RoundedRectangle(cornerRadius: 16))
+				MediaLoadingView(progress: model.processingProgress)
 			}
 		}
 		.onAppear { model.start() }
@@ -128,47 +101,6 @@ struct CameraView: View {
 	}
 }
 
-struct CapturePreviewView: View {
-	@ObservedObject var model: CameraService
-	@Binding var isPresented: Bool
-
-	var body: some View {
-		VStack(spacing: 16) {
-			Group {
-				if let url = model.capturedPhotoURL,
-				   let uiImage = UIImage(contentsOfFile: url.path) {
-					Image(uiImage: uiImage)
-						.resizable()
-						.scaledToFit()
-				} else if let url = model.capturedVideoURL {
-					VideoPlayer(player: AVPlayer(url: url))
-						.scaledToFit()
-				} else {
-					Text("Nothing captured.")
-				}
-			}
-			.frame(maxWidth: .infinity, maxHeight: .infinity)
-
-			HStack(spacing: 16) {
-				Button("Retake") {
-					model.discardCapture()
-					isPresented = false
-				}
-				.buttonStyle(.bordered)
-
-				Button("Save") {
-					model.saveCaptureToPhotos()
-					isPresented = false
-				}
-				.buttonStyle(.borderedProminent)
-			}
-			.padding(.bottom, 24)
-		}
-		.padding()
-		.background(.black)
-		.foregroundStyle(.white)
-	}
-}
 
 #Preview("CameraView") {
 	CameraView()

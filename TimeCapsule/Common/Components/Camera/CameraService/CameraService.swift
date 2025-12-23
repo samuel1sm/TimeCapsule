@@ -13,7 +13,7 @@ final class CameraService: NSObject, ObservableObject {
 	@Published var capturedVideoURL: URL?
 	@Published var errorMessage: String?
 	@Published var isProcessing = false
-	@Published var processingProgress: Double = 0.0 // 0.0 ... 1.0
+	@Published var processingProgress: Double = 0.0
 
 	let session = AVCaptureSession()
 
