@@ -12,6 +12,7 @@ final class CameraService: NSObject, ObservableObject {
 	@Published var capturedPhotoURL: URL?
 	@Published var capturedVideoURL: URL?
 	@Published var errorMessage: String?
+	@Published var isProcessing = false
 
 	let session = AVCaptureSession()
 
@@ -169,7 +170,7 @@ final class CameraService: NSObject, ObservableObject {
 	}
 
 	func toggleRecording() {
-		if isRecording {
+	if isRecording {
 			// Stop the entire session; merge after the last segment finalizes.
 			pendingStopFinalizeAndMerge = true
 			movieOutput.stopRecording()
@@ -390,9 +391,13 @@ extension CameraService: AVCaptureFileOutputRecordingDelegate {
 			return
 		}
 
+		// Indicate processing has started
+		isProcessing = true
+
 		if segments.count == 1 {
 			capturedVideoURL = segments[0]
 			segmentURLs.removeAll()
+			isProcessing = false
 			return
 		}
 
@@ -406,7 +411,10 @@ extension CameraService: AVCaptureFileOutputRecordingDelegate {
 				let videoTrack = composition.addMutableTrack(withMediaType: .video, preferredTrackID: kCMPersistentTrackID_Invalid),
 				let audioTrack = composition.addMutableTrack(withMediaType: .audio, preferredTrackID: kCMPersistentTrackID_Invalid)
 			else {
-				await MainActor.run { self.errorMessage = "Failed to create composition tracks." }
+				await MainActor.run {
+					self.errorMessage = "Failed to create composition tracks."
+					self.isProcessing = false
+				}
 				return
 			}
 
@@ -426,7 +434,10 @@ extension CameraService: AVCaptureFileOutputRecordingDelegate {
 							at: currentTime
 						)
 					} catch {
-						await MainActor.run { self.errorMessage = "Merge failed (video): \(error.localizedDescription)" }
+						await MainActor.run {
+							self.errorMessage = "Merge failed (video): \(error.localizedDescription)"
+							self.isProcessing = false
+						}
 						return
 					}
 				}
@@ -439,7 +450,10 @@ extension CameraService: AVCaptureFileOutputRecordingDelegate {
 							at: currentTime
 						)
 					} catch {
-						await MainActor.run { self.errorMessage = "Merge failed (audio): \(error.localizedDescription)" }
+						await MainActor.run {
+							self.errorMessage = "Merge failed (audio): \(error.localizedDescription)"
+							self.isProcessing = false
+						}
 						return
 					}
 				}
@@ -451,13 +465,16 @@ extension CameraService: AVCaptureFileOutputRecordingDelegate {
 			videoTrack.preferredTransform = videoTransform
 
 			guard let exporter = AVAssetExportSession(asset: composition, presetName: AVAssetExportPresetHighestQuality) else {
-				await MainActor.run { self.errorMessage = "Failed to create exporter." }
+				await MainActor.run {
+					self.errorMessage = "Failed to create exporter."
+					self.isProcessing = false
+				}
 				return
 			}
 			exporter.shouldOptimizeForNetworkUse = true
 
-
 			Task { [weak self] in
+				guard let self else { return }
 				do {
 					try await exporter.export(to: outputURL, as: .mov)
 
@@ -467,14 +484,16 @@ extension CameraService: AVCaptureFileOutputRecordingDelegate {
 					}
 
 					// UI/state updates ON the main thread
-					await MainActor.run { [self] in
-						self?.capturedVideoURL = outputURL
-						self?.segmentURLs.removeAll()
+					await MainActor.run {
+						self.capturedVideoURL = outputURL
+						self.segmentURLs.removeAll()
+						self.isProcessing = false
 					}
 				} catch {
-					await MainActor.run { [self] in
-						self?.errorMessage = error.localizedDescription
-						self?.segmentURLs.removeAll()
+					await MainActor.run {
+						self.errorMessage = error.localizedDescription
+						self.segmentURLs.removeAll()
+						self.isProcessing = false
 					}
 				}
 			}

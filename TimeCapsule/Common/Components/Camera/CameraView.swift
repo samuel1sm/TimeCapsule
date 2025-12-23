@@ -73,6 +73,23 @@ struct CameraView: View {
 				.padding(.horizontal, 16)
 				.padding(.bottom, 40)
 			}
+
+			// Loading overlay while processing merged/exported video
+			if model.isProcessing {
+				Color.black.opacity(0.5)
+					.ignoresSafeArea()
+				VStack(spacing: 16) {
+					ProgressView()
+						.progressViewStyle(.circular)
+						.tint(.white)
+					Text("Processing video...")
+						.font(.headline)
+						.foregroundStyle(.white)
+				}
+				.padding(24)
+				.background(Color.black.opacity(0.7))
+				.clipShape(RoundedRectangle(cornerRadius: 16))
+			}
 		}
 		.onAppear { model.start() }
 		.onDisappear { model.stop() }
