@@ -8,53 +8,66 @@ struct CameraView: View {
 
 	var body: some View {
 		ZStack {
+			#if targetEnvironment(simulator)
+			// Simulator: show a plain white screen
+			Color.white
+				.ignoresSafeArea()
+			#else
+			// Real device: show the camera preview
 			CameraRepresentable(session: model.session) { layer in
 				model.attachPreviewLayer(layer)
 			}
 			.ignoresSafeArea()
+			#endif
 
 			VStack {
 				Spacer()
 
-				HStack {
-					// Existing capture controls centered-ish
-					Spacer()
-
-					HStack(spacing: 20) {
-						Button {
-							model.takePhoto()
-							showPreview = true
-						} label: {
-							Text("Photo")
-								.padding(.horizontal, 20).padding(.vertical, 12)
-								.background(.black.opacity(0.6))
-								.foregroundStyle(.white)
-								.clipShape(Capsule())
+				ZStack {
+					HStack {
+						// Existing capture controls centered-ish
+						Spacer()
+						
+						HStack(spacing: 20) {
+							Button {
+								model.takePhoto()
+								showPreview = true
+							} label: {
+								Text("Photo")
+									.padding(.horizontal, 24).padding(.vertical, 16)
+									.background(.black.opacity(0.6))
+									.foregroundStyle(.white)
+									.clipShape(Capsule())
+							}
+							
+							Button {
+								model.toggleRecording()
+							} label: {
+								Text(model.isRecording ? "Stop" : "Record")
+									.padding(.horizontal, 24).padding(.vertical, 16)
+									.background(model.isRecording ? .red.opacity(0.7) : .black.opacity(0.6))
+									.foregroundStyle(.white)
+									.clipShape(Capsule())
+							}
 						}
-
-						Button {
-							model.toggleRecording()
-						} label: {
-							Text(model.isRecording ? "Stop" : "Record")
-								.padding(.horizontal, 20).padding(.vertical, 12)
-								.background(model.isRecording ? .red.opacity(0.7) : .black.opacity(0.6))
-								.foregroundStyle(.white)
-								.clipShape(Capsule())
-						}
+						
+						Spacer()
+						
+						// Bottom-right camera switch button
 					}
 
-					Spacer()
-
-					// Bottom-right camera switch button
-					Button {
-						model.switchCamera()
-					} label: {
-						Image(systemName: "arrow.triangle.2.circlepath.camera")
-							.font(.system(size: 18, weight: .semibold))
-							.padding(12)
-							.background(.black.opacity(0.6))
-							.foregroundStyle(.white)
-							.clipShape(Circle())
+					HStack {
+						Spacer()
+						Button {
+							model.switchCamera()
+						} label: {
+							Image(systemName: "arrow.triangle.2.circlepath.camera")
+								.font(.system(size: 18, weight: .semibold))
+								.padding(12)
+								.background(.black.opacity(0.6))
+								.foregroundStyle(.white)
+								.clipShape(Circle())
+						}
 					}
 				}
 				.padding(.horizontal, 16)
@@ -77,6 +90,7 @@ struct CameraView: View {
 		} message: {
 			Text(model.errorMessage ?? "")
 		}
+
 	}
 }
 
@@ -120,4 +134,10 @@ struct CapturePreviewView: View {
 		.background(.black)
 		.foregroundStyle(.white)
 	}
+}
+
+#Preview("CameraView") {
+	// In Xcode previews, this runs in the simulator, so the view will show the white placeholder.
+	// We also wrap in a NavigationStack or similar if you need environment setup.
+	CameraView()
 }
