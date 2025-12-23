@@ -13,6 +13,7 @@ final class CameraService: NSObject, ObservableObject {
 	@Published var capturedVideoURL: URL?
 	@Published var errorMessage: String?
 	@Published var isProcessing = false
+	@Published var processingProgress: Double = 0.0 // 0.0 ... 1.0
 
 	let session = AVCaptureSession()
 
@@ -170,7 +171,7 @@ final class CameraService: NSObject, ObservableObject {
 	}
 
 	func toggleRecording() {
-	if isRecording {
+		if isRecording {
 			// Stop the entire session; merge after the last segment finalizes.
 			pendingStopFinalizeAndMerge = true
 			movieOutput.stopRecording()
@@ -393,11 +394,13 @@ extension CameraService: AVCaptureFileOutputRecordingDelegate {
 
 		// Indicate processing has started
 		isProcessing = true
+		processingProgress = 0.0
 
 		if segments.count == 1 {
 			capturedVideoURL = segments[0]
 			segmentURLs.removeAll()
 			isProcessing = false
+			processingProgress = 1.0
 			return
 		}
 
@@ -414,6 +417,7 @@ extension CameraService: AVCaptureFileOutputRecordingDelegate {
 				await MainActor.run {
 					self.errorMessage = "Failed to create composition tracks."
 					self.isProcessing = false
+					self.processingProgress = 0.0
 				}
 				return
 			}
@@ -437,6 +441,7 @@ extension CameraService: AVCaptureFileOutputRecordingDelegate {
 						await MainActor.run {
 							self.errorMessage = "Merge failed (video): \(error.localizedDescription)"
 							self.isProcessing = false
+							self.processingProgress = 0.0
 						}
 						return
 					}
@@ -453,6 +458,7 @@ extension CameraService: AVCaptureFileOutputRecordingDelegate {
 						await MainActor.run {
 							self.errorMessage = "Merge failed (audio): \(error.localizedDescription)"
 							self.isProcessing = false
+							self.processingProgress = 0.0
 						}
 						return
 					}
@@ -468,6 +474,7 @@ extension CameraService: AVCaptureFileOutputRecordingDelegate {
 				await MainActor.run {
 					self.errorMessage = "Failed to create exporter."
 					self.isProcessing = false
+					self.processingProgress = 0.0
 				}
 				return
 			}
@@ -488,19 +495,23 @@ extension CameraService: AVCaptureFileOutputRecordingDelegate {
 						self.capturedVideoURL = outputURL
 						self.segmentURLs.removeAll()
 						self.isProcessing = false
+						self.processingProgress = 1.0
 					}
 				} catch {
 					await MainActor.run {
 						self.errorMessage = error.localizedDescription
 						self.segmentURLs.removeAll()
 						self.isProcessing = false
+						self.processingProgress = 0.0
 					}
 				}
 			}
 
-			for await state in exporter.states(updateInterval: 0.5) {
+			for await state in exporter.states(updateInterval: 0.1) {
 				if case .exporting(let progress) = state {
-					print("Progress: \(progress.fractionCompleted)")
+					await MainActor.run {
+						self.processingProgress = min(max(progress.fractionCompleted, 0.0), 1.0)
+					}
 				}
 			}
 		}

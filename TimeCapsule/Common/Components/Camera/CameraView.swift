@@ -79,12 +79,29 @@ struct CameraView: View {
 				Color.black.opacity(0.5)
 					.ignoresSafeArea()
 				VStack(spacing: 16) {
-					ProgressView()
-						.progressViewStyle(.circular)
-						.tint(.white)
-					Text("Processing video...")
-						.font(.headline)
-						.foregroundStyle(.white)
+					if model.processingProgress <= 0 {
+						// Initial phase: unknown progress -> circular spinner
+						ProgressView()
+							.progressViewStyle(.circular)
+							.tint(.white)
+						Text("Processing video...")
+							.font(.headline)
+							.foregroundStyle(.white)
+					} else {
+						// Progress known: show linear bar and percentage
+						ZStack(alignment: .leading) {
+							RoundedRectangle(cornerRadius: 8)
+								.fill(Color.white.opacity(0.2))
+								.frame(width: 240, height: 12)
+							RoundedRectangle(cornerRadius: 8)
+								.fill(Color.white)
+								.frame(width: 240 * model.processingProgress, height: 12)
+								.animation(.easeInOut(duration: 0.1), value: model.processingProgress)
+						}
+						Text("Processing video... \(Int(model.processingProgress * 100))%")
+							.font(.headline)
+							.foregroundStyle(.white)
+					}
 				}
 				.padding(24)
 				.background(Color.black.opacity(0.7))
@@ -154,7 +171,5 @@ struct CapturePreviewView: View {
 }
 
 #Preview("CameraView") {
-	// In Xcode previews, this runs in the simulator, so the view will show the white placeholder.
-	// We also wrap in a NavigationStack or similar if you need environment setup.
 	CameraView()
 }
