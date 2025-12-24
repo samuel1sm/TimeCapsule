@@ -4,6 +4,11 @@ import Photos
 import SwiftUI
 import Combine
 
+enum CameraServiceError: Error {
+
+	case saveError
+}
+
 @MainActor
 final class CameraService: NSObject, ObservableObject {
 
@@ -202,25 +207,29 @@ final class CameraService: NSObject, ObservableObject {
 	}
 
 	func saveCaptureToPhotos() {
-		if let photoURL = capturedPhotoURL {
-			PHPhotoLibrary.shared().performChanges({
-				PHAssetChangeRequest.creationRequestForAssetFromImage(atFileURL: photoURL)
-			}) { [weak self] success, error in
-				DispatchQueue.main.async {
-					if !success {
-						self?.errorMessage = error?.localizedDescription ?? "Failed to save photo."
-					}
-				}
+
+		Task { @MainActor [weak self] in
+			guard let self else { return }
+
+			// Decide what to save before calling performChanges (non-throwing closure).
+			let photoURL = self.capturedPhotoURL
+			let videoURL = self.capturedVideoURL
+
+			guard photoURL != nil || videoURL != nil else {
+				self.errorMessage = "No media to save"
+				return
 			}
-		} else if let videoURL = capturedVideoURL {
-			PHPhotoLibrary.shared().performChanges({
-				PHAssetChangeRequest.creationRequestForAssetFromVideo(atFileURL: videoURL)
-			}) { [weak self] success, error in
-				DispatchQueue.main.async {
-					if !success {
-						self?.errorMessage = error?.localizedDescription ?? "Failed to save video."
+
+			do {
+				try await PHPhotoLibrary.shared().performChanges {
+					if let url = photoURL {
+						PHAssetChangeRequest.creationRequestForAssetFromImage(atFileURL: url)
+					} else if let url = videoURL {
+						PHAssetChangeRequest.creationRequestForAssetFromVideo(atFileURL: url)
 					}
 				}
+			} catch {
+				self.errorMessage = "Failed to save media"
 			}
 		}
 	}
