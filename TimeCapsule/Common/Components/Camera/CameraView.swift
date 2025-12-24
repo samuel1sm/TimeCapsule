@@ -57,6 +57,7 @@ struct CameraView: View {
 								showPreview = true
 							} label: {
 								Text("Photo")
+									.frame(width: 60)
 									.padding(.horizontal, 24).padding(.vertical, 16)
 									.background(.black.opacity(0.6))
 									.foregroundStyle(.white)
@@ -67,6 +68,7 @@ struct CameraView: View {
 								model.toggleRecording()
 							} label: {
 								Text(model.isRecording ? "Stop" : "Record")
+									.frame(width: 60)
 									.padding(.horizontal, 24).padding(.vertical, 16)
 									.background(model.isRecording ? .red.opacity(0.7) : .black.opacity(0.6))
 									.foregroundStyle(.white)
