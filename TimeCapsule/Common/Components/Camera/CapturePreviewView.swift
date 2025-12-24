@@ -5,6 +5,8 @@ import AVKit
 struct CapturePreviewView: View {
 	@ObservedObject var model: CameraService
 	@Binding var isPresented: Bool
+	let saveMedia: () -> ()
+	let cancelSave: () -> ()
 
 	var body: some View {
 		VStack(spacing: 16) {
@@ -25,13 +27,13 @@ struct CapturePreviewView: View {
 
 			HStack(spacing: 16) {
 				Button("Retake") {
-					model.discardCapture()
+					cancelSave()
 					isPresented = false
 				}
 				.buttonStyle(.bordered)
 
 				Button("Save") {
-					model.saveCaptureToPhotos()
+					saveMedia()
 					isPresented = false
 				}
 				.buttonStyle(.borderedProminent)

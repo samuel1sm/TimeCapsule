@@ -130,7 +130,12 @@ struct CameraView: View {
 			if newValue != nil { showPreview = true }
 		}
 		.fullScreenCover(isPresented: $showPreview) {
-			CapturePreviewView(model: model, isPresented: $showPreview)
+			CapturePreviewView(
+				model: model,
+				isPresented: $showPreview,
+				saveMedia: { model.saveCaptureToPhotos() },
+				cancelSave: model.discardCapture
+			)
 		}
 		.alert("Camera Error", isPresented: .constant(model.errorMessage != nil)) {
 			Button("OK") { model.errorMessage = nil }
