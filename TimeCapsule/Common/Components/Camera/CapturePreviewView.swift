@@ -3,20 +3,21 @@ import AVFoundation
 import AVKit
 
 struct CapturePreviewView: View {
-	@ObservedObject var model: CameraService
 	@Binding var isPresented: Bool
-	let saveMedia: () -> ()
-	let cancelSave: () -> ()
+	var capturedPhotoURL: URL?
+	var capturedVideoURL: URL?
+	var saveMedia: () -> ()
+	var cancelSave: () -> ()
 
 	var body: some View {
 		VStack(spacing: 16) {
 			Group {
-				if let url = model.capturedPhotoURL,
+				if let url = capturedPhotoURL,
 				   let uiImage = UIImage(contentsOfFile: url.path) {
 					Image(uiImage: uiImage)
 						.resizable()
 						.scaledToFit()
-				} else if let url = model.capturedVideoURL {
+				} else if let url = capturedVideoURL {
 					VideoPlayer(player: AVPlayer(url: url))
 						.scaledToFit()
 				} else {

@@ -131,8 +131,9 @@ struct CameraView: View {
 		}
 		.fullScreenCover(isPresented: $showPreview) {
 			CapturePreviewView(
-				model: model,
 				isPresented: $showPreview,
+				capturedPhotoURL: model.capturedPhotoURL,
+				capturedVideoURL: model.capturedVideoURL,
 				saveMedia: { model.saveCaptureToPhotos() },
 				cancelSave: model.discardCapture
 			)
