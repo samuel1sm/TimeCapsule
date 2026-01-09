@@ -136,7 +136,9 @@ struct InputContainerView: View {
 			.foregroundStyle(.black)
 			.animation(.default, value: thoughtsText)
 		}.sheet(isPresented: $showCamera) {
-			CameraView()
+			CameraView(saveImageAction: { mediaModel in
+				sendNote(.init(entryType: .media, mediaModel: mediaModel))
+			})
 		}
 	}
 
