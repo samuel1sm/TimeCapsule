@@ -1,17 +1,10 @@
 import SwiftUI
 import Combine
 
-private struct PreviewPayload: Identifiable, Equatable {
-
-	let id = UUID()
-	let capturedPhotoURL: URL?
-	let capturedVideoURL: URL?
-}
-
 struct CameraView: View {
 
 	@StateObject private var model = CameraService()
-	@State private var previewPayload: PreviewPayload?
+	@State private var showPreview = false
 
 	// Recording timer state
 	@State private var recordingStartDate: Date?
@@ -19,6 +12,10 @@ struct CameraView: View {
 	@State private var timerActive: Bool = false
 	private let timer = Timer.publish(every: 1, on: .main, in: .common).autoconnect()
 	let saveImageAction: (MediaModel) -> Void
+
+	private var capturedMediaIsEmpty: Bool {
+		model.capturedPhotoURL == nil && model.capturedVideoURL == nil
+	}
 
 	var body: some View {
 		ZStack {
@@ -126,49 +123,30 @@ struct CameraView: View {
 				elapsedSeconds = 0
 			}
 		}
-		// Tick every second while active
 		.onReceive(timer) { _ in
-			// If the preview is on screen, avoid ticking/refreshing the camera UI.
-			guard previewPayload == nil else { return }
+			guard !showPreview else { return }
 			guard timerActive, let start = recordingStartDate else { return }
 			elapsedSeconds = max(0, Int(Date().timeIntervalSince(start)))
 		}
-		.onChange(of: model.capturedPhotoURL) { _, newValue in
-			guard let url = newValue else { return }
-			// Create a stable snapshot so the preview doesn't "reload" on every model update.
-			if previewPayload == nil {
-				previewPayload = PreviewPayload(capturedPhotoURL: url, capturedVideoURL: nil)
-			}
-		}
-		.onChange(of: model.capturedVideoURL) { _, newValue in
-			guard let url = newValue else { return }
-			if previewPayload == nil {
-				previewPayload = PreviewPayload(capturedPhotoURL: nil, capturedVideoURL: url)
-			}
-		}.onChange(of: previewPayload) { _, newValue in
-			if newValue != nil {
+		.onChange(of: capturedMediaIsEmpty) {
+			if !capturedMediaIsEmpty {
 				model.stop()
+				showPreview = true
 			}
 		}
 		.fullScreenCover(
-			item: $previewPayload,
-			onDismiss: {
-				// Ensure URLs are cleared so we don't immediately re-present.
-				model.discardCapture()
-			}
-		) { payload in
+			isPresented: $showPreview,
+			onDismiss: { model.discardCapture() }
+		) {
 			CapturePreviewView(
-				capturedPhotoURL: payload.capturedPhotoURL,
-				capturedVideoURL: payload.capturedVideoURL,
+				capturedPhotoURL: model.capturedPhotoURL,
+				capturedVideoURL: model.capturedVideoURL,
 				saveMedia: { [model, saveImageAction] in
 					model.saveCaptureToPhotos()
 					// TODO: adjust MediaModel init as needed for your real data.
 					saveImageAction(.init(type: .video, url: []))
-					previewPayload = nil
 				},
 				cancelSave: {
-					model.discardCapture()
-					previewPayload = nil
 					model.start()
 				}
 			)
