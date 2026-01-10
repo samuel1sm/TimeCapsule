@@ -11,18 +11,23 @@ struct CameraView: View {
 	@State private var elapsedSeconds: Int = 0
 	@State private var timerActive: Bool = false
 	private let timer = Timer.publish(every: 1, on: .main, in: .common).autoconnect()
+	let saveImageAction: (MediaModel) -> Void
+
+	private var capturedMediaIsEmpty: Bool {
+		model.capturedPhotoURL == nil && model.capturedVideoURL == nil
+	}
 
 	var body: some View {
 		ZStack {
-			#if targetEnvironment(simulator)
+#if targetEnvironment(simulator)
 			Color.white
 				.ignoresSafeArea()
-			#else
+#else
 			CameraRepresentable(session: model.session) { layer in
 				model.attachPreviewLayer(layer)
 			}
 			.ignoresSafeArea()
-			#endif
+#endif
 
 			// Top-center timer overlay (only while recording)
 			VStack {
@@ -50,11 +55,11 @@ struct CameraView: View {
 				ZStack {
 					HStack {
 						Spacer()
-						
+
 						HStack(spacing: 20) {
 							Button {
 								model.takePhoto()
-								showPreview = true
+								// Present only when `model.capturedPhotoURL` arrives.
 							} label: {
 								Text("Photo")
 									.frame(width: 60)
@@ -63,7 +68,7 @@ struct CameraView: View {
 									.foregroundStyle(.white)
 									.clipShape(Capsule())
 							}
-							
+
 							Button {
 								model.toggleRecording()
 							} label: {
@@ -75,7 +80,7 @@ struct CameraView: View {
 									.clipShape(Capsule())
 							}
 						}
-						
+
 						Spacer()
 					}
 
@@ -118,24 +123,32 @@ struct CameraView: View {
 				elapsedSeconds = 0
 			}
 		}
-		// Tick every second while active
 		.onReceive(timer) { _ in
+			guard !showPreview else { return }
 			guard timerActive, let start = recordingStartDate else { return }
 			elapsedSeconds = max(0, Int(Date().timeIntervalSince(start)))
 		}
-		.onChange(of: model.capturedPhotoURL) { _, newValue in
-			if newValue != nil { showPreview = true }
+		.onChange(of: capturedMediaIsEmpty) {
+			if !capturedMediaIsEmpty {
+				model.stop()
+				showPreview = true
+			}
 		}
-		.onChange(of: model.capturedVideoURL) { _, newValue in
-			if newValue != nil { showPreview = true }
-		}
-		.fullScreenCover(isPresented: $showPreview) {
+		.fullScreenCover(
+			isPresented: $showPreview,
+			onDismiss: { model.discardCapture() }
+		) {
 			CapturePreviewView(
-				isPresented: $showPreview,
 				capturedPhotoURL: model.capturedPhotoURL,
 				capturedVideoURL: model.capturedVideoURL,
-				saveMedia: { model.saveCaptureToPhotos() },
-				cancelSave: model.discardCapture
+				saveMedia: { [model, saveImageAction] in
+					model.saveCaptureToPhotos()
+					// TODO: adjust MediaModel init as needed for your real data.
+					saveImageAction(.init(type: .video, url: []))
+				},
+				cancelSave: {
+					model.start()
+				}
 			)
 		}
 		.alert("Camera Error", isPresented: .constant(model.errorMessage != nil)) {
@@ -154,5 +167,5 @@ struct CameraView: View {
 
 
 #Preview("CameraView") {
-	CameraView()
+	CameraView(saveImageAction: {_ in })
 }

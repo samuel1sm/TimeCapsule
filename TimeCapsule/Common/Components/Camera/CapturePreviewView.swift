@@ -3,7 +3,7 @@ import AVFoundation
 import AVKit
 
 struct CapturePreviewView: View {
-	@Binding var isPresented: Bool
+	@Environment(\.dismiss) private var dismiss
 	var capturedPhotoURL: URL?
 	var capturedVideoURL: URL?
 	var saveMedia: () -> ()
@@ -29,13 +29,13 @@ struct CapturePreviewView: View {
 			HStack(spacing: 16) {
 				Button("Retake") {
 					cancelSave()
-					isPresented = false
+					dismiss()
 				}
 				.buttonStyle(.bordered)
 
 				Button("Save") {
 					saveMedia()
-					isPresented = false
+					dismiss()
 				}
 				.buttonStyle(.borderedProminent)
 			}
