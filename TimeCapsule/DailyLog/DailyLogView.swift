@@ -6,12 +6,13 @@ struct DailyLogView: View {
 	@State private var feelingText = ""
 	@FocusState private var isComposerFocused: Bool
 	@State private var entries: [EntryModel] = []
+	@State private var interval: Double = .infinity
 	private let horizontalSpacing = 16
 
 	var body: some View {
 		let _ = Self._printChanges()
 			VStack(alignment: .leading, spacing: 0) {
-				DailyLogHeaderView()
+				DailyLogHeaderView(interval: $interval)
 				.padding(.horizontal)
 				.padding(.top)
 				.padding(.bottom, 24)

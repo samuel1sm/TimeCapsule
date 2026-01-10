@@ -3,8 +3,9 @@ import Combine
 
 struct DailyLogHeaderView: View {
 	@State private var now = Date()
-	@State var closesTimeText: String = ""
 	private let timer = Timer.publish(every: 1, on: .main, in: .common).autoconnect()
+	@Binding var interval: Double
+	@State var closesTimeText: String = ""
 
 	private static let dateFormatter: DateFormatter = {
 		let formatter = DateFormatter()
@@ -53,27 +54,27 @@ struct DailyLogHeaderView: View {
 		}
 		.onReceive(timer) { date in
 			now = date
-			closesTimeText = computeClosesInString(from: date)
+			computeClosesInterval(from: date)
 		}
 		.onAppear {
-			closesTimeText = computeClosesInString(from: now)
+			computeClosesInterval(from: now)
 		}
 	}
 
-	private func computeClosesInString(from date: Date) -> String {
+	private func computeClosesInterval(from date: Date) {
 		let calendar = Calendar.current
 		guard let midnight = calendar.nextDate(
 			after: date,
 			matching: DateComponents(hour: 0, minute: 0, second: 0),
 			matchingPolicy: .nextTimePreservingSmallerComponents
-		) else { return "--" }
+		) else { return }
 
-		let interval = max(0, midnight.timeIntervalSince(date))
-		return Self.timeFormatter.string(from: interval) ?? "--"
+		interval = max(0, midnight.timeIntervalSince(date))
+		closesTimeText = Self.timeFormatter.string(from: interval) ?? "--"
 	}
 }
 
 #Preview {
-	DailyLogHeaderView()
+	DailyLogHeaderView(interval: .constant(60))
 	.padding()
 }
