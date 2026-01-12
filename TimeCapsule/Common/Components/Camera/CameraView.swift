@@ -27,10 +27,10 @@ struct CameraView: View {
 			CameraRepresentable(session: model.session) { layer in
 				model.attachPreviewLayer(layer)
 			}
-			.ignoresSafeArea()
 #endif
 
 			VStack {
+				// Top bar that extends into the top safe area, with centered timer
 				HStack(alignment: .center) {
 					Button {
 						dismiss()
@@ -42,20 +42,24 @@ struct CameraView: View {
 							.foregroundStyle(.white)
 							.padding(.all, 24)
 					}
+					.padding(.top, 16)
 					Spacer()
-				}.overlay(alignment: .center) {
+				}
+				.overlay(alignment: .center) {
 					if !isPhotoSelected {
 						Text(formattedTime(elapsedSeconds))
 							.font(.system(.headline, design: .monospaced))
 							.padding(.horizontal, 12)
 							.padding(.vertical, 6)
-							.background(.black.opacity(0.4))
+							.background(Color.black.opacity(0.4))
 							.foregroundStyle(.white)
 							.clipShape(Capsule())
 					}
 				}
-				.background(.black.opacity(0.4))
-				.padding(.top, 60)
+				.frame(maxWidth: .infinity)
+				.padding(.top, 12)
+				.background(Color.black.opacity(0.4))
+				.ignoresSafeArea(edges: .top)
 
 				Spacer()
 
@@ -80,9 +84,9 @@ struct CameraView: View {
 							}
 						} label: {
 							ZStack(alignment: .center) {
-								Circle().frame(width: 80).foregroundStyle(model.isRecording ? .red : .white )
-								Circle().frame(width: 70).foregroundStyle(.black.opacity(0.4))
-								Circle().frame(width: 60).foregroundStyle(model.isRecording ? .red : .white)
+								Circle().frame(width: 80).foregroundStyle(model.isRecording ? Color.red : Color.white)
+								Circle().frame(width: 70).foregroundStyle(Color.black.opacity(0.4))
+								Circle().frame(width: 60).foregroundStyle(model.isRecording ? Color.red : Color.white)
 							}
 						}
 					}
@@ -94,16 +98,17 @@ struct CameraView: View {
 							Image(systemName: "arrow.triangle.2.circlepath.camera")
 								.font(.system(size: 18, weight: .semibold))
 								.padding(12)
-								.background(.black.opacity(0.6))
-								.foregroundStyle(.white)
+								.background(Color.black.opacity(0.6))
+								.foregroundColor(.white)
 								.clipShape(Circle())
 						}
 					}
 				}
 				.padding(.horizontal, 16)
 				.padding(.bottom, 40)
-				.background(.black.opacity(0.4))
+				.background(Color.black.opacity(0.4))
 			}
+
 			// Loading overlay while processing merged/exported video
 			if model.isProcessing {
 				Color.black.opacity(0.5)

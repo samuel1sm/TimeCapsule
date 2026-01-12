@@ -19,7 +19,6 @@ struct ImageToggle: View {
     var offColor: Color = .gray.opacity(0.35)
     var thumbColor: Color = .white
 
-	private var textForegroundColor: Color { isOn ? .white : .secondary}
     private var thumbSize: CGFloat { height - padding * 2 }
     private var travel: CGFloat { width - padding * 2 - thumbSize }
 
@@ -28,7 +27,7 @@ struct ImageToggle: View {
             if let leftLabel {
                 Text(leftLabel)
                     .font(.subheadline)
-                    .foregroundStyle(textForegroundColor)
+					.foregroundStyle(Color.white.opacity(!isOn ? 1 : 0.8))
             }
 
             Button {
@@ -63,7 +62,7 @@ struct ImageToggle: View {
             if let rightLabel {
                 Text(rightLabel)
                     .font(.subheadline)
-                    .foregroundStyle(textForegroundColor)
+					.foregroundStyle(Color.white.opacity(isOn ? 1 : 0.8))
             }
         }
     }
