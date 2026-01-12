@@ -3,8 +3,10 @@ import Combine
 
 struct CameraView: View {
 
+	@Environment(\.dismiss) private var dismiss
 	@StateObject private var model = CameraService()
 	@State private var showPreview = false
+	@State private var isPhotoSelected = true
 
 	// Recording timer state
 	@State private var recordingStartDate: Date?
@@ -20,8 +22,7 @@ struct CameraView: View {
 	var body: some View {
 		ZStack {
 #if targetEnvironment(simulator)
-			Color.white
-				.ignoresSafeArea()
+			Color.white.ignoresSafeArea()
 #else
 			CameraRepresentable(session: model.session) { layer in
 				model.attachPreviewLayer(layer)
@@ -29,63 +30,64 @@ struct CameraView: View {
 			.ignoresSafeArea()
 #endif
 
-			// Top-center timer overlay (only while recording)
 			VStack {
-				HStack {
+				HStack(alignment: .center) {
+					Button {
+						dismiss()
+					} label: {
+						Image(systemName: "x.circle.fill")
+							.resizable()
+							.frame(width: 24, height: 24)
+							.scaledToFit()
+							.foregroundStyle(.white)
+							.padding(.all, 24)
+					}
 					Spacer()
-					if model.isRecording {
+				}.overlay(alignment: .center) {
+					if !isPhotoSelected {
 						Text(formattedTime(elapsedSeconds))
 							.font(.system(.headline, design: .monospaced))
 							.padding(.horizontal, 12)
 							.padding(.vertical, 6)
-							.background(.black.opacity(0.6))
+							.background(.black.opacity(0.4))
 							.foregroundStyle(.white)
 							.clipShape(Capsule())
 					}
-					Spacer()
 				}
-				.padding(.top, 12)
+				.background(.black.opacity(0.4))
+				.padding(.top, 60)
 
 				Spacer()
-			}
 
-			VStack {
-				Spacer()
+				VStack {
+					ImageToggle(
+						isOn: $isPhotoSelected,
+						leftLabel: "Video",
+						rightLabel: "Photo",
+						onThumbImage: Image(systemName: "camera"),
+						offThumbImage: Image(systemName: "recordingtape"),
+						onColor: .blue,
+						offColor: .red
+					)
+					.padding(.vertical, 16)
 
-				ZStack {
-					HStack {
-						Spacer()
-
-						HStack(spacing: 20) {
-							Button {
+					HStack(spacing: 20) {
+						Button {
+							if isPhotoSelected {
 								model.takePhoto()
-								// Present only when `model.capturedPhotoURL` arrives.
-							} label: {
-								Text("Photo")
-									.frame(width: 60)
-									.padding(.horizontal, 24).padding(.vertical, 16)
-									.background(.black.opacity(0.6))
-									.foregroundStyle(.white)
-									.clipShape(Capsule())
-							}
-
-							Button {
+							} else {
 								model.toggleRecording()
-							} label: {
-								Text(model.isRecording ? "Stop" : "Record")
-									.frame(width: 60)
-									.padding(.horizontal, 24).padding(.vertical, 16)
-									.background(model.isRecording ? .red.opacity(0.7) : .black.opacity(0.6))
-									.foregroundStyle(.white)
-									.clipShape(Capsule())
+							}
+						} label: {
+							ZStack(alignment: .center) {
+								Circle().frame(width: 80).foregroundStyle(model.isRecording ? .red : .white )
+								Circle().frame(width: 70).foregroundStyle(.black.opacity(0.4))
+								Circle().frame(width: 60).foregroundStyle(model.isRecording ? .red : .white)
 							}
 						}
-
-						Spacer()
 					}
-
-					HStack {
-						Spacer()
+					.frame(maxWidth: .infinity)
+					.overlay(alignment: .trailing) {
 						Button {
 							model.switchCamera()
 						} label: {
@@ -100,8 +102,8 @@ struct CameraView: View {
 				}
 				.padding(.horizontal, 16)
 				.padding(.bottom, 40)
+				.background(.black.opacity(0.4))
 			}
-
 			// Loading overlay while processing merged/exported video
 			if model.isProcessing {
 				Color.black.opacity(0.5)
@@ -109,9 +111,9 @@ struct CameraView: View {
 				MediaLoadingView(progress: model.processingProgress)
 			}
 		}
+		.ignoresSafeArea()
 		.onAppear { model.start() }
 		.onDisappear { model.stop() }
-		// Drive timer start/stop based on recording state
 		.onChange(of: model.isRecording) { _, newValue in
 			if newValue {
 				recordingStartDate = Date()
