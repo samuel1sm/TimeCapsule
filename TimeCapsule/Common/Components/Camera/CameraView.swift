@@ -31,33 +31,33 @@ struct CameraView: View {
 
 			VStack {
 				// Top bar that extends into the top safe area, with centered timer
-				HStack(alignment: .center) {
-					Button {
-						dismiss()
-					} label: {
-						Image(systemName: "x.circle.fill")
-							.resizable()
-							.frame(width: 24, height: 24)
-							.scaledToFit()
-							.foregroundStyle(.white)
-							.padding(.all, 24)
-					}
-					.padding(.top, 16)
-					Spacer()
-				}
-				.overlay(alignment: .center) {
+				ZStack(alignment: .center) {
 					if !isPhotoSelected {
 						Text(formattedTime(elapsedSeconds))
 							.font(.system(.headline, design: .monospaced))
 							.padding(.horizontal, 12)
 							.padding(.vertical, 6)
+							.frame(height: 32)
 							.background(Color.black.opacity(0.4))
 							.foregroundStyle(.white)
 							.clipShape(Capsule())
 					}
+					HStack(alignment: .bottom) {
+						Button {
+							dismiss()
+						} label: {
+							Image(systemName: "x.circle.fill")
+								.resizable()
+								.scaledToFit()
+								.frame(width: 24, height: 32)
+								.foregroundStyle(.white)
+								.padding(.horizontal, 24)
+						}
+						Spacer()
+					}
 				}
-				.frame(maxWidth: .infinity)
-				.padding(.top, 12)
+				.padding(.top, 80)
+				.padding(.bottom, 20)
 				.background(Color.black.opacity(0.4))
 				.ignoresSafeArea(edges: .top)
 
