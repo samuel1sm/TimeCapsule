@@ -56,7 +56,14 @@ final class CameraService: NSObject, ObservableObject {
 	// MARK: - Permissions + lifecycle
 
 	func start() {
-		Task { await requestPermissionsAndConfigure() }
+		// If the session already has inputs configured, don't reconfigure; just start running.
+		if !session.inputs.isEmpty {
+			Task.detached { [weak self] in
+				await self?.session.startRunning()
+			}
+		} else {
+			Task { await requestPermissionsAndConfigure() }
+		}
 	}
 
 	func stop() {
@@ -93,31 +100,40 @@ final class CameraService: NSObject, ObservableObject {
 		session.beginConfiguration()
 		session.sessionPreset = .high
 
-		// Video input
-		guard let camera = AVCaptureDevice.default(.builtInWideAngleCamera, for: .video, position: .back),
-			  let videoInput = try? AVCaptureDeviceInput(device: camera),
-			  session.canAddInput(videoInput)
-		else {
-			finishConfigWithError("Failed to add video input.")
-			return
-		}
-		session.addInput(videoInput)
-		videoDevice = camera
-
-		// Audio input (needed for movie recording audio)
-		if let mic = AVCaptureDevice.default(for: .audio),
-		   let audioInput = try? AVCaptureDeviceInput(device: mic),
-		   session.canAddInput(audioInput) {
-			session.addInput(audioInput)
+		// Reuse existing video input if present; otherwise add one.
+		if let existingVideoInput = session.inputs.compactMap({ $0 as? AVCaptureDeviceInput }).first(where: { $0.device.hasMediaType(.video) }) {
+			videoDevice = existingVideoInput.device
+		} else {
+			guard let camera = AVCaptureDevice.default(.builtInWideAngleCamera, for: .video, position: .back),
+				  let videoInput = try? AVCaptureDeviceInput(device: camera),
+				  session.canAddInput(videoInput)
+			else {
+				finishConfigWithError("Failed to add video input.")
+				return
+			}
+			session.addInput(videoInput)
+			videoDevice = camera
 		}
 
-		// Photo output
-		if session.canAddOutput(photoOutput) {
+		// Audio input (needed for movie recording audio) — add only if missing
+		let hasAudioInput = session.inputs.compactMap { $0 as? AVCaptureDeviceInput }.contains { $0.device.hasMediaType(.audio) }
+		if !hasAudioInput {
+			if let mic = AVCaptureDevice.default(for: .audio),
+			   let audioInput = try? AVCaptureDeviceInput(device: mic),
+			   session.canAddInput(audioInput) {
+				session.addInput(audioInput)
+			}
+		}
+
+		// Photo output — add only if not already added
+		let hasPhotoOutput = session.outputs.contains { $0 === photoOutput }
+		if !hasPhotoOutput, session.canAddOutput(photoOutput) {
 			session.addOutput(photoOutput)
 		}
 
-		// Movie output
-		if session.canAddOutput(movieOutput) {
+		// Movie output — add only if not already added
+		let hasMovieOutput = session.outputs.contains { $0 === movieOutput }
+		if !hasMovieOutput, session.canAddOutput(movieOutput) {
 			session.addOutput(movieOutput)
 		}
 
