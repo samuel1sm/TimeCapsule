@@ -20,6 +20,11 @@ final class CameraService: NSObject, ObservableObject {
 	@Published var isProcessing = false
 	@Published var processingProgress: Double = 0.0
 
+	// Flash/Torch state
+	@Published var flashMode: AVCaptureDevice.FlashMode = .off
+	var isFlashAvailable: Bool { videoDevice?.hasFlash == true }
+	var isTorchAvailable: Bool { videoDevice?.hasTorch == true }
+
 	let session = AVCaptureSession()
 
 	private let photoOutput = AVCapturePhotoOutput()
@@ -48,6 +53,8 @@ final class CameraService: NSObject, ObservableObject {
 
 	func stop() {
 		Task { @MainActor [weak self] in
+			// Ensure torch is off when stopping the session
+			self?.setTorchMode(.off)
 			self?.session.stopRunning()
 		}
 	}
@@ -169,9 +176,15 @@ final class CameraService: NSObject, ObservableObject {
 			isRecording = false
 			segmentURLs.removeAll()
 			activeSegmentCount = 0
+			// Turn torch off when leaving video mode
+			setTorchMode(.off)
 		}
 
 		let settings = AVCapturePhotoSettings()
+		// Apply flash for still photos if available
+		if isFlashAvailable {
+			settings.flashMode = flashMode
+		}
 		photoOutput.capturePhoto(with: settings, delegate: self)
 	}
 
@@ -180,6 +193,8 @@ final class CameraService: NSObject, ObservableObject {
 			// Stop the entire session; merge after the last segment finalizes.
 			pendingStopFinalizeAndMerge = true
 			movieOutput.stopRecording()
+			// Ensure torch is off when stopping
+			setTorchMode(.off)
 			return
 		}
 
@@ -191,6 +206,8 @@ final class CameraService: NSObject, ObservableObject {
 
 		startNewSegment()
 		isRecording = true
+		// Apply torch according to current flashMode when recording starts
+		applyTorchForCurrentModeIfNeeded()
 	}
 
 	private func startNewSegment() {
@@ -315,6 +332,63 @@ final class CameraService: NSObject, ObservableObject {
 			session.commitConfiguration()
 
 			setupRotationCoordinatorIfPossible()
+			// Re-apply torch after switching cameras if recording
+			applyTorchForCurrentModeIfNeeded()
+		} catch {
+			errorMessage = error.localizedDescription
+		}
+	}
+
+	// MARK: - Flash/Torch controls
+
+	func cycleFlashMode() {
+		switch flashMode {
+		case .off:
+			flashMode = .on
+		case .on:
+			flashMode = .auto
+		case .auto:
+			flashMode = .off
+		@unknown default:
+			flashMode = .off
+		}
+		// If recording video, update torch to reflect new mode
+		applyTorchForCurrentModeIfNeeded()
+	}
+
+	func setFlashMode(_ mode: AVCaptureDevice.FlashMode) {
+		flashMode = mode
+		applyTorchForCurrentModeIfNeeded()
+	}
+
+	private func applyTorchForCurrentModeIfNeeded() {
+		// Torch (continuous light) is only relevant for video recording.
+		guard isRecording else {
+			setTorchMode(.off)
+			return
+		}
+		switch flashMode {
+		case .off:
+			setTorchMode(.off)
+		case .on:
+			setTorchMode(.on)
+		case .auto:
+			setTorchMode(.auto)
+		@unknown default:
+			setTorchMode(.off)
+		}
+	}
+
+	private func setTorchMode(_ mode: AVCaptureDevice.TorchMode) {
+		guard let device = videoDevice, device.hasTorch else { return }
+		do {
+			try device.lockForConfiguration()
+			if device.isTorchModeSupported(mode) {
+				device.torchMode = mode
+			} else {
+				device.torchMode = .off
+			}
+			device.unlockForConfiguration()
 		} catch {
 			errorMessage = error.localizedDescription
 		}
@@ -383,12 +457,16 @@ extension CameraService: AVCaptureFileOutputRecordingDelegate {
 				// Immediately start next segment to continue recording
 				self.startNewSegment()
 				self.isRecording = true
+				// Apply torch according to flashMode after resuming recording
+				self.applyTorchForCurrentModeIfNeeded()
 				return
 			}
 
 			// If user requested stop of entire session and no active segments remain, merge
 			if self.pendingStopFinalizeAndMerge, self.activeSegmentCount == 0 {
 				self.isRecording = false
+				// Ensure torch is off when recording stops
+				self.setTorchMode(.off)
 				self.mergeSegmentsAndFinish()
 			}
 		}

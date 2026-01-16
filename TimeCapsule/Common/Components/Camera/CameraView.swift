@@ -1,5 +1,6 @@
 import SwiftUI
 import Combine
+import AVFoundation
 
 struct CameraView: View {
 
@@ -17,6 +18,10 @@ struct CameraView: View {
 
 	private var capturedMediaIsEmpty: Bool {
 		model.capturedPhotoURL == nil && model.capturedVideoURL == nil
+	}
+
+	private var isFlashTorchAvailable: Bool {
+		isPhotoSelected ? model.isFlashAvailable : model.isTorchAvailable
 	}
 
 	var body: some View {
@@ -74,6 +79,7 @@ struct CameraView: View {
 						offColor: .red
 					)
 					.padding(.vertical, 16)
+					.disabled(model.isRecording)
 
 					HStack(spacing: 20) {
 						Button {
@@ -91,16 +97,37 @@ struct CameraView: View {
 						}
 					}
 					.frame(maxWidth: .infinity)
-					.overlay(alignment: .trailing) {
-						Button {
-							model.switchCamera()
-						} label: {
-							Image(systemName: "arrow.triangle.2.circlepath.camera")
-								.font(.system(size: 18, weight: .semibold))
-								.padding(12)
-								.background(Color.black.opacity(0.6))
-								.foregroundColor(.white)
-								.clipShape(Circle())
+					.overlay(alignment: .center) {
+						HStack {
+							// Flash/Torch mode button
+							Button {
+								model.cycleFlashMode()
+							} label: {
+								Image(systemName: flashTorchIconName)
+									.font(.system(size: 18, weight: .semibold))
+									.frame(width: 20, height: 20)
+									.padding(12)
+									.background(Color.black.opacity(0.6))
+									.foregroundColor(.white)
+									.clipShape(Circle())
+							}
+							.disabled(!isFlashTorchAvailable)
+							.opacity(isFlashTorchAvailable ? 1 : 0.5)
+
+							Spacer()
+
+							// Camera switch button
+							Button {
+								model.switchCamera()
+							} label: {
+								Image(systemName: "arrow.triangle.2.circlepath.camera")
+									.font(.system(size: 18, weight: .semibold))
+									.frame(width: 20, height: 20)
+									.padding(12)
+									.background(Color.black.opacity(0.6))
+									.foregroundColor(.white)
+									.clipShape(Circle())
+							}
 						}
 					}
 				}
@@ -169,6 +196,15 @@ struct CameraView: View {
 		let m = seconds / 60
 		let s = seconds % 60
 		return String(format: "%02d:%02d", m, s)
+	}
+
+	private var flashTorchIconName: String {
+		switch model.flashMode {
+			case .off: return "bolt.slash.fill"
+			case .on: return "bolt.fill"
+			case .auto: return "bolt.badge.a"
+			@unknown default: return "bolt.slash.fill"
+		}
 	}
 }
 
