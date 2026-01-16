@@ -9,6 +9,9 @@ struct CapturePreviewView: View {
 	var saveMedia: () -> ()
 	var cancelSave: () -> ()
 
+	// Holds the computed width/height aspect ratio of the video (e.g. 9/16 for portrait)
+	@State private var videoAspectRatio: CGFloat?
+
 	var body: some View {
 		VStack(spacing: 16) {
 			Group {
@@ -19,7 +22,10 @@ struct CapturePreviewView: View {
 						.scaledToFit()
 				} else if let url = capturedVideoURL {
 					VideoPlayer(player: AVPlayer(url: url))
-						.scaledToFit()
+						.aspectRatio(videoAspectRatio ?? (9.0 / 16.0), contentMode: .fit)
+						.task(id: url) {
+							videoAspectRatio = await loadAspectRatio(for: url) ?? (9.0 / 16.0)
+						}
 				} else {
 					Text("Nothing captured.")
 				}
@@ -41,8 +47,26 @@ struct CapturePreviewView: View {
 			}
 			.padding(.bottom, 24)
 		}
-		.padding()
+		.padding(.vertical)
 		.background(.black)
 		.foregroundStyle(.white)
+	}
+
+	private func loadAspectRatio(for url: URL) async -> CGFloat? {
+		let asset = AVURLAsset(url: url)
+		do {
+			guard let track = try await asset.loadTracks(withMediaType: .video).first else { return nil }
+			let naturalSize = try await track.load(.naturalSize)
+			let transform = try await track.load(.preferredTransform)
+
+			// Apply the transform to get the display size
+			let transformedRect = CGRect(origin: .zero, size: naturalSize).applying(transform)
+			let displaySize = CGSize(width: abs(transformedRect.width), height: abs(transformedRect.height))
+
+			guard displaySize.width > 0, displaySize.height > 0 else { return nil }
+			return displaySize.width / displaySize.height
+		} catch {
+			return nil
+		}
 	}
 }
