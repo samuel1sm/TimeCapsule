@@ -20,6 +20,7 @@ struct CameraView: View {
 		model.capturedPhotoURL == nil && model.capturedVideoURL == nil
 	}
 
+	// Availability for the flash/torch button
 	private var isFlashTorchAvailable: Bool {
 		isPhotoSelected ? model.isFlashAvailable : model.isTorchAvailable
 	}

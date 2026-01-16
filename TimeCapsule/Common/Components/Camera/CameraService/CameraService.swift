@@ -22,15 +22,23 @@ final class CameraService: NSObject, ObservableObject {
 
 	// Flash/Torch state
 	@Published var flashMode: AVCaptureDevice.FlashMode = .off
-	var isFlashAvailable: Bool { videoDevice?.hasFlash == true }
-	var isTorchAvailable: Bool { videoDevice?.hasTorch == true }
+	@Published var isFlashTorchAvailable = false
+
+	@Published var isFlashAvailable: Bool = false
+	@Published var isTorchAvailable: Bool = false
 
 	let session = AVCaptureSession()
 
 	private let photoOutput = AVCapturePhotoOutput()
 	private let movieOutput = AVCaptureMovieFileOutput()
 
-	private var videoDevice: AVCaptureDevice?
+	private var videoDevice: AVCaptureDevice? {
+		didSet {
+			isFlashAvailable = videoDevice?.hasFlash == true
+			isTorchAvailable = videoDevice?.hasTorch == true
+		}
+	}
+
 	private var previewLayer: AVCaptureVideoPreviewLayer?
 	private var rotationCoordinator: AVCaptureDevice.RotationCoordinator?
 	private var previewAngleObservation: NSKeyValueObservation?
