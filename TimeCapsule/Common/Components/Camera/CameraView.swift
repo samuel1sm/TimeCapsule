@@ -176,10 +176,11 @@ struct CameraView: View {
 			CapturePreviewView(
 				capturedPhotoURL: model.capturedPhotoURL,
 				capturedVideoURL: model.capturedVideoURL,
-				saveMedia: { [model, saveImageAction] in
-					model.saveCaptureToPhotos()
-					// TODO: adjust MediaModel init as needed for your real data.
-					saveImageAction(.init(type: .video, url: []))
+				saveMedia: { [model, saveImageAction, dismiss] in
+					model.saveCaptureToPhotos { type, url in
+						saveImageAction(.init(type: type, url: [url]))
+						dismiss()
+					}
 				},
 				cancelSave: {
 					model.start()

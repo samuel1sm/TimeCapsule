@@ -4,9 +4,10 @@ import Photos
 import SwiftUI
 import Combine
 
-enum CameraServiceError: Error {
+enum CameraServiceError: String, Error {
 
-	case saveError
+	case noMidiaToSave = "No current video input."
+	case saveError = "Failed to save media"
 }
 
 @MainActor
@@ -247,9 +248,9 @@ final class CameraService: NSObject, ObservableObject {
 		capturedVideoURL = nil
 	}
 
-	func saveCaptureToPhotos() {
+	func saveCaptureToPhotos(resut: @escaping (MediaTypes, URL) -> Void) {
 
-		Task { @MainActor [weak self] in
+		Task { @MainActor [resut, weak self] in
 			guard let self else { return }
 
 			// Decide what to save before calling performChanges (non-throwing closure).
@@ -257,7 +258,7 @@ final class CameraService: NSObject, ObservableObject {
 			let videoURL = self.capturedVideoURL
 
 			guard photoURL != nil || videoURL != nil else {
-				self.errorMessage = "No media to save"
+				self.errorMessage = CameraServiceError.noMidiaToSave.rawValue
 				return
 			}
 
@@ -265,12 +266,14 @@ final class CameraService: NSObject, ObservableObject {
 				try await PHPhotoLibrary.shared().performChanges {
 					if let url = photoURL {
 						PHAssetChangeRequest.creationRequestForAssetFromImage(atFileURL: url)
+						resut(.image, url)
 					} else if let url = videoURL {
 						PHAssetChangeRequest.creationRequestForAssetFromVideo(atFileURL: url)
+						resut(.video, url)
 					}
 				}
 			} catch {
-				self.errorMessage = "Failed to save media"
+				self.errorMessage = CameraServiceError.saveError.rawValue
 			}
 		}
 	}
