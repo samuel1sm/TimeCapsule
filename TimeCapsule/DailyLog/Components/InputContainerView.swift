@@ -140,10 +140,8 @@ struct InputContainerView: View {
 				saveImageAction: { mediaModel in
 					sendNote(.init(
 						entryType: .media,
-						mediaModel: .init( items: [(
-							mediaModel.mediaType,
-							mediaModel.url
-						)])))
+						mediaModel: .init( items: [mediaModel.toMediaData()])
+					))
 					showCamera = false
 			})
 		}
