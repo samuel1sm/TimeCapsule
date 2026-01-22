@@ -136,8 +136,15 @@ struct InputContainerView: View {
 			.foregroundStyle(.black)
 			.animation(.default, value: thoughtsText)
 		}.fullScreenCover(isPresented: $showCamera) {
-			CameraView(saveImageAction: { mediaModel in
-				sendNote(.init(entryType: .media, mediaModel: mediaModel))
+			CameraView(
+				saveImageAction: { mediaModel in
+					sendNote(.init(
+						entryType: .media,
+						mediaModel: .init( items: [(
+							mediaModel.mediaType,
+							mediaModel.url
+						)])))
+					showCamera = false
 			})
 		}
 	}
@@ -171,7 +178,7 @@ struct InputContainerView: View {
 	private func handleOptionSelection(_ option: InputOption) {
 		switch option {
 		case .camera:
-			print("Camera tapped")
+			showCamera = true
 		case .gallery:
 			print("Gallery tapped")
 		case .documents:

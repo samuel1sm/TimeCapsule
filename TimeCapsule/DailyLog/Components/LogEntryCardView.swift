@@ -47,13 +47,23 @@ struct LogEntryCardView: View {
 			if let model = entry.noteModel {
 				Text(model.note).font(.body)
 			}
-
-//        case let .photos(_, thumbnails):
-//            PhotoGridView(images: thumbnails)
-
-//        case let .voiceNote
-//            Text("\(recordings) recording\(recordings > 1 ? "s" : "")")
-//                .font(.body)
+		case .media:
+			if let model = entry.mediaModel, let first = model.items.first {
+				switch first.0 {
+				case .image:
+					LocalFileImage(url: first.1)
+						.scaledToFill()
+						.frame(width: 80, height: 80)
+						.clipped()
+						.cornerRadius(12)
+				case .video:
+					LocalVideoPlayerView(model:
+						.init(type: .video, url: first.1, identifier: 0)
+					)
+					.frame(width: 80, height: 80)
+					.cornerRadius(12)
+				}
+			}
 		default:
 			Text("tedst")
         }
@@ -69,3 +79,4 @@ struct LogEntryCardView: View {
 			.frame(minHeight: 100)
 	}.padding(.horizontal)
 }
+

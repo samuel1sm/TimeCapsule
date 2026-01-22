@@ -248,7 +248,7 @@ final class CameraService: NSObject, ObservableObject {
 		capturedVideoURL = nil
 	}
 
-	func saveCaptureToPhotos(resut: @escaping (MediaTypes, URL) -> Void) {
+	func saveCaptureToPhotos(resut: @escaping (CameraViewResultModel) -> Void) {
 
 		Task { @MainActor [resut, weak self] in
 			guard let self else { return }
@@ -266,10 +266,10 @@ final class CameraService: NSObject, ObservableObject {
 				try await PHPhotoLibrary.shared().performChanges {
 					if let url = photoURL {
 						PHAssetChangeRequest.creationRequestForAssetFromImage(atFileURL: url)
-						resut(.image, url)
+						resut(.init(mediaType: .image, url: url))
 					} else if let url = videoURL {
 						PHAssetChangeRequest.creationRequestForAssetFromVideo(atFileURL: url)
-						resut(.video, url)
+						resut(.init(mediaType: .video, url: url))
 					}
 				}
 			} catch {

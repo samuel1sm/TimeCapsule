@@ -14,7 +14,7 @@ struct CameraView: View {
 	@State private var elapsedSeconds: Int = 0
 	@State private var timerActive: Bool = false
 	private let timer = Timer.publish(every: 1, on: .main, in: .common).autoconnect()
-	let saveImageAction: (MediaModel) -> Void
+	let saveImageAction: (CameraViewResultModel) -> Void
 
 	private var capturedMediaIsEmpty: Bool {
 		model.capturedPhotoURL == nil && model.capturedVideoURL == nil
@@ -176,11 +176,8 @@ struct CameraView: View {
 			CapturePreviewView(
 				capturedPhotoURL: model.capturedPhotoURL,
 				capturedVideoURL: model.capturedVideoURL,
-				saveMedia: { [model, saveImageAction, dismiss] in
-					model.saveCaptureToPhotos { type, url in
-						saveImageAction(.init(type: type, url: [url]))
-						dismiss()
-					}
+				saveMedia: { [model, saveImageAction] in
+					model.saveCaptureToPhotos(resut: saveImageAction)
 				},
 				cancelSave: {
 					model.start()
